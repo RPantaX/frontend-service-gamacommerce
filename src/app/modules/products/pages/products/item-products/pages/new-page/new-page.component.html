@@ -1,0 +1,245 @@
+<div class="form-wrapper">
+  <h2 class="form-title">Formulario de Item de Producto</h2>
+
+  <form [formGroup]="entityForm" (ngSubmit)="submit()" class="form-grid">
+
+    <!-- DATOS PRINCIPALES -->
+    <div *ngIf="isEditMode" class="form-field">
+      <label for="productId">ID del Producto</label>
+      <input pInputText id="productId" formControlName="productId" readonly />
+    </div>
+
+    <div class="form-field">
+      <label for="productItemSKU">SKU del Producto *</label>
+      <input
+        pInputText
+        id="productItemSKU"
+        formControlName="productItemSKU"
+        [class.ng-invalid]="isInvalid('productItemSKU')"
+        placeholder="Ingrese el SKU del item"
+        />
+      <!-- Mostrar errores de validación estándar -->
+      <small class="p-error" *ngIf="isInvalid('productItemSKU') && !skuError()">
+        {{ getFieldError('productItemSKU') }}
+      </small>
+
+      <!-- Mostrar error específico del backend -->
+      <small class="p-error" *ngIf="skuError()">
+        {{ skuError() }}
+      </small>
+    </div>
+
+    <div class="form-field">
+      <label for="productItemQuantityInStock">Cantidad en Stock *</label>
+      <input
+        pInputText
+        id="productItemQuantityInStock"
+        formControlName="productItemQuantityInStock"
+        type="number"
+        min="0"
+        [class.ng-invalid]="isInvalid('productItemQuantityInStock')"
+        placeholder="0"
+      />
+      <small class="p-error" *ngIf="isInvalid('productItemQuantityInStock')">
+        {{ getFieldError('productItemQuantityInStock') }}
+      </small>
+    </div>
+
+    <div class="form-field">
+      <label for="productItemPrice">Precio *</label>
+      <input
+        pInputText
+        id="productItemPrice"
+        formControlName="productItemPrice"
+        type="number"
+        step="0.01"
+        min="0.01"
+        [class.ng-invalid]="isInvalid('productItemPrice')"
+        placeholder="0.00"
+      />
+      <small class="p-error" *ngIf="isInvalid('productItemPrice')">
+        {{ getFieldError('productItemPrice') }}
+      </small>
+    </div>
+
+    <!-- IMAGEN DEL ITEM DE PRODUCTO -->
+    <div class="form-field image-field">
+      <label for="productItemImage">Imagen del Item de Producto</label>
+
+      <div class="flex flex-column gap-3">
+        <input
+          type="file"
+          #fileInput
+          accept="image/jpeg,image/png,image/gif,image/webp"
+          (change)="onFileSelected($event)"
+          class="hidden"
+          id="fileInput"
+        />
+
+        <div class="flex gap-2 align-items-center">
+          <p-button
+            type="button"
+            label="Seleccionar Imagen"
+            icon="pi pi-upload"
+            (click)="fileInput.click()"
+            [disabled]="isSubmitting()"
+            severity="secondary"
+            [outlined]="true"
+            size="small"
+          ></p-button>
+
+          <p-button
+            type="button"
+            label="Remover"
+            icon="pi pi-times"
+            (click)="removeImage()"
+            [disabled]="!imagePreview() || isSubmitting()"
+            severity="danger"
+            [outlined]="true"
+            size="small"
+          ></p-button>
+
+          <!-- Indicador de cambios -->
+          <span *ngIf="hasImageChanged()" class="text-sm text-orange-500">
+            <i class="pi pi-exclamation-triangle"></i>
+            {{ shouldDeleteImage() ? 'La imagen será eliminada' : 'Nueva imagen seleccionada' }}
+          </span>
+        </div>
+
+        <!-- Preview de la imagen -->
+        <div *ngIf="imagePreview()" class="image-preview-container">
+          <div class="relative inline-block">
+            <img
+              [src]="imagePreview()"
+              alt="Vista previa de la imagen del item"
+              class="item-image-preview"
+            />
+
+            <!-- Overlay cuando la imagen será eliminada -->
+            <div
+              *ngIf="shouldDeleteImage()"
+              class="image-overlay"
+            >
+              <span class="overlay-text">
+                <i class="pi pi-times-circle"></i>
+                Será eliminada
+              </span>
+            </div>
+          </div>
+
+          <small class="image-info">
+            Formatos soportados: JPG, PNG, GIF, WebP (máximo 5MB)
+          </small>
+        </div>
+
+        <!-- Mensaje cuando no hay imagen -->
+        <div *ngIf="!imagePreview()" class="no-image-placeholder">
+          <i class="pi pi-image text-4xl text-300"></i>
+          <p class="text-500 mt-2">No hay imagen seleccionada</p>
+          <small class="text-sm text-400">Haga clic en "Seleccionar Imagen" para agregar una</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- VARIACIONES -->
+    <div class="variation-container">
+      <!-- Columna izquierda -->
+      <div class="form-section">
+        <h3>Agregar Nueva Variación</h3>
+
+        <div class="form-field">
+          <label>Variación:</label>
+          <select formControlName="variationName" class="variation-select">
+            <option value="">-- Seleccione la variación --</option>
+            @for (varia of variations(); track varia) {
+              <option [value]="varia.variationName">{{ varia.variationName }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label>Opción:</label>
+          <select formControlName="variationOptionValue" class="variation-select">
+            <option value="">-- Seleccione la opción --</option>
+            @for (option of optionVariations(); track option) {
+              <option [value]="option.variationOptionValue">{{ option.variationOptionValue }}</option>
+            }
+          </select>
+        </div>
+
+        <button
+          pButton
+          type="button"
+          label="Agregar Variación"
+          icon="pi pi-plus"
+          class="p-button-sm p-button-success full-width"
+          (click)="addToVariation()"
+          [disabled]="
+            entityForm.get('variationName')?.invalid ||
+            entityForm.get('variationOptionValue')?.invalid ||
+            !entityForm.get('variationName')?.value ||
+            !entityForm.get('variationOptionValue')?.value ||
+            isSubmitting()
+          ">
+        </button>
+      </div>
+
+      <!-- Columna derecha -->
+      <div class="form-section">
+        <h3>Variaciones Agregadas</h3>
+        <div formArrayName="requestVariations">
+          <!-- Mensaje cuando no hay variaciones -->
+          <div *ngIf="variationsArray.length === 0" class="no-variations-message">
+            <p>No hay variaciones agregadas</p>
+            <small>Debe agregar al menos una variación</small>
+          </div>
+
+          <!-- Lista de variaciones -->
+          <ng-container *ngFor="let group of variationsArray.controls; let i = index">
+            <div [formGroupName]="i" class="variation-row">
+              <input pInputText formControlName="variationName" readonly class="half-width" />
+              <input pInputText formControlName="variationOptionValue" readonly class="half-width" />
+              <button
+                pButton
+                type="button"
+                icon="pi pi-trash"
+                class="p-button-danger p-button-rounded p-button-sm"
+                [disabled]="isSubmitting()"
+                (click)="deleteVariation(i)"
+                title="Eliminar variación">
+              </button>
+            </div>
+          </ng-container>
+
+          <!-- Error de variaciones mínimas -->
+          <small class="p-error" *ngIf="variationsArray.invalid && variationsArray.touched">
+            {{ getFieldError('requestVariations') }}
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTONES -->
+    <div class="form-actions">
+      <button
+        pButton
+        type="button"
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-text"
+        [disabled]="isSubmitting()"
+        [routerLink]="['/products/manage', 'edit', idProduct]">
+      </button>
+
+      <button
+        pButton
+        type="submit"
+        [label]="isEditMode ? 'Actualizar Item' : 'Crear Item'"
+        icon="pi pi-check"
+        [disabled]="entityForm.invalid || isSubmitting()"
+        [loading]="isSubmitting()"
+        class="p-button-success">
+      </button>
+    </div>
+  </form>
+</div>

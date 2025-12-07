@@ -8,8 +8,8 @@ import { EcommerceProduct } from '../../../../shared/models/ecommerce/ecommerce.
       <!-- Product Image -->
       <div class="product-image-container">
         <img
-          [src]="product.productImage || 'assets/images/product-placeholder.jpg'"
-          [alt]="product.productName"
+          [src]="product.productItemImage"
+          [alt]="product.productItemSKU"
           class="product-image"
           (click)="viewDetails()" />
 
@@ -50,10 +50,10 @@ import { EcommerceProduct } from '../../../../shared/models/ecommerce/ecommerce.
       <!-- Product Info -->
       <div class="product-info" (click)="viewDetails()">
         <div class="product-category">
-          {{ product.responseCategory.productCategoryName || 'Sin categoría' }}
+          {{ 'Categoria en construccion' }}
 
         </div>
-        <h3 class="product-name">{{ product.productName }}</h3>
+        <h3 class="product-name">{{ product.productItemSKU }}</h3>
 
         <div class="product-rating" *ngIf="product.rating && product.rating > 0">
           <p-rating
@@ -129,7 +129,7 @@ export class ProductCardComponent {
    * Check if product has discount
    */
   hasDiscount(): boolean {
-    return this.product.responseCategory?.promotionDTOList?.length > 0;
+    return true;
   }
 
   /**
@@ -137,17 +137,15 @@ export class ProductCardComponent {
    */
   getDiscountPercentage(): number {
     if (!this.hasDiscount()) return 0;
-    const promotion = this.product.responseCategory.promotionDTOList[0];
-    return Math.round(promotion.promotionDiscountRate * 100);
+    const promotion = 0.2;
+    return Math.round(promotion * 100);
   }
 
   /**
    * Get original price
    */
   getOriginalPrice(): number {
-    if (!this.product.responseProductItemDetails.length) return 0;
-    const prices = this.product.responseProductItemDetails.map(item => item.productItemPrice);
-    return Math.min(...prices);
+    return this.product.productItemPrice;
   }
 
   /**
@@ -157,7 +155,7 @@ export class ProductCardComponent {
     const originalPrice = this.getOriginalPrice();
     if (!this.hasDiscount()) return originalPrice;
 
-    const discountRate = this.product.responseCategory.promotionDTOList[0].promotionDiscountRate;
+    const discountRate = 0.2;
     return originalPrice * (1 - discountRate);
   }
 
@@ -165,16 +163,13 @@ export class ProductCardComponent {
    * Check if product is in stock
    */
   isInStock(): boolean {
-    return this.product.responseProductItemDetails.some(item => item.productItemQuantityInStock > 0);
+    return this.product.productItemQuantityInStock > 0;
   }
 
   /**
    * Get total stock
    */
   getTotalStock(): number {
-    return this.product.responseProductItemDetails.reduce(
-      (total, item) => total + item.productItemQuantityInStock,
-      0
-    );
+    return this.product.productItemQuantityInStock;
   }
 }

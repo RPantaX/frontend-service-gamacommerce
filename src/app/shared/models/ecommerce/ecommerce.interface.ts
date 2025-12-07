@@ -3,12 +3,12 @@
 // ============================================================================
 
 export interface EcommerceProduct {
-  productId: number;
-  productName: string;
-  productDescription: string;
-  productImage?: string;
-  responseCategory: ProductCategory;
-  responseProductItemDetails: ProductItemDetail[];
+  productItemId: number;
+  productItemSKU: string;
+  productItemQuantityInStock: number;
+  productItemImage?: string;
+  productItemPrice: number;
+  variations: ProductVariation[];
   // Campos adicionales para e-commerce
   featured?: boolean;
   newProduct?: boolean;
@@ -22,13 +22,16 @@ export interface ProductCategory {
   promotionDTOList: Promotion[];
 }
 
-export interface ProductItemDetail {
+export interface ProductItemDetail extends EcommerceProduct {
   productItemId: number;
   productItemSKU: string;
   productItemQuantityInStock: number;
   productItemImage?: string;
   productItemPrice: number;
   variations: ProductVariation[];
+  reviews?: Review[];
+  averageRating?: number;
+  specifications?: ProductSpecification[];
   // Campos adicionales
   salePrice?: number;
   discount?: number;
@@ -176,7 +179,7 @@ export interface Cart {
 // ============================================================================
 
 export interface EcommerceProductResponse {
-  responseProductList: EcommerceProduct[];
+  responseProductList: ProductItemDetail[];
   pageNumber: number;
   pageSize: number;
   totalPages: number;

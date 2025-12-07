@@ -299,8 +299,8 @@
                   <!-- Product Image -->
                   <div class="product-image-container">
                     <img
-                      [src]="product.productImage || 'assets/images/product-1.png'"
-                      [alt]="product.productName"
+                      [src]="product.productItemImage"
+                      [alt]="product.productItemSKU"
                       class="product-image"
                       (click)="goToProductDetail(product)"
                       loading="lazy" />
@@ -308,7 +308,7 @@
                     <!-- Product Badges -->
                     <div class="product-badges">
                       <span
-                        *ngIf="product.responseCategory?.promotionDTOList?.length && product.responseCategory.promotionDTOList.length > 0"
+                        *ngIf="true"
                         class="badge discount-badge">
                         -{{ getDiscountPercentage(product) }}%
                       </span>
@@ -348,9 +348,9 @@
                   <!-- Product Info -->
                   <div class="product-info" (click)="goToProductDetail(product)">
                     <div class="product-category">
-                      {{ product.responseCategory.productCategoryName || 'Sin categoría' }}
+                      {{ 'Categoria en construccion' }}
                     </div>
-                    <h3 class="product-name">{{ product.productName }}</h3>
+                    <h3 class="product-name">{{ product.productItemSKU }}</h3>
 
                     <div class="product-rating" *ngIf="product.rating && product.rating > 0">
                       <p-rating
@@ -406,8 +406,8 @@
               <!-- Product Image -->
               <div class="list-product-image">
                 <img
-                  [src]="product.productImage || 'assets/images/product-placeholder.jpg'"
-                  [alt]="product.productName"
+                  [src]="product.productItemImage"
+                  [alt]="product.productItemSKU"
                   (click)="goToProductDetail(product)"
                   loading="lazy" />
 
@@ -430,9 +430,9 @@
               <div class="list-product-details" (click)="goToProductDetail(product)">
                 <div class="list-product-header">
                   <div class="product-category">
-                    {{ product.responseCategory.productCategoryName || 'Sin categoría' }}
+                    {{ 'Categoria en construccion' }}
                   </div>
-                  <h3 class="product-name">{{ product.productName }}</h3>
+                  <h3 class="product-name">{{ product.productItemSKU }}</h3>
 
                   <div class="product-rating" *ngIf="product.rating && product.rating > 0">
                     <p-rating
@@ -446,22 +446,22 @@
                 </div>
 
                 <p class="product-description">
-                  {{ product.productDescription }}
+                  {{ product.productItemSKU }}
                 </p>
 
                 <div class="list-product-meta">
-                  <div class="product-variations" *ngIf="product.responseProductItemDetails.length > 0">
+                  <div class="product-variations" *ngIf="true">
                     <span class="variations-label">Variaciones:</span>
                     <div class="variation-chips">
                       <span
                         class="variation-chip"
-                        *ngFor="let item of product.responseProductItemDetails.slice(0, 3)">
+                        *ngFor="let item of products.slice(0, 3)">
                         {{ getVariationSummary(item) }}
                       </span>
                       <span
-                        *ngIf="product.responseProductItemDetails.length > 3"
+                        *ngIf="products.length > 3"
                         class="variation-chip more">
-                        +{{ product.responseProductItemDetails.length - 3 }} más
+                        +{{ products.length - 3 }} más
                       </span>
                     </div>
                   </div>

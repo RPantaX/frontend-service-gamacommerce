@@ -221,7 +221,7 @@ export class EcommerceHomeComponent implements OnInit, OnDestroy {
    * Navigate to product detail
    */
   goToProductDetail(product: EcommerceProduct): void {
-    this.router.navigate(['ecommerce/products', product.productId]);
+    this.router.navigate(['ecommerce/products', product.productItemId]);
   }
 
   /**
@@ -249,7 +249,7 @@ export class EcommerceHomeComponent implements OnInit, OnDestroy {
    * Add product to cart
    */
   addToCart(product: EcommerceProduct): void {
-    if (!product.responseProductItemDetails.length) {
+    if (!product.productItemQuantityInStock || product.productItemQuantityInStock <= 0) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Producto no disponible',
@@ -259,10 +259,8 @@ export class EcommerceHomeComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Use first available item if only one variant
-    const firstItem = product.responseProductItemDetails[0];
 
-    if (firstItem.productItemQuantityInStock <= 0) {
+    if (product.productItemQuantityInStock <= 0) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Sin stock',
@@ -273,17 +271,17 @@ export class EcommerceHomeComponent implements OnInit, OnDestroy {
     }
 
     const cartItem: CartItem = {
-      id: firstItem.productItemId,
+      id: product.productItemId,
       type: 'product',
-      productId: product.productId,
-      productItemId: firstItem.productItemId,
-      name: product.productName,
-      description: product.productDescription,
-      image: product.productImage || firstItem.productItemImage,
-      price: firstItem.productItemPrice,
+      productId: product.productItemId,
+      productItemId: product.productItemId,
+      name: product.productItemSKU,
+      description: "to do",
+      image: product.productItemImage,
+      price: product.productItemPrice,
       quantity: 1,
-      maxQuantity: firstItem.productItemQuantityInStock,
-      selectedVariations: firstItem.variations.map(v => ({
+      maxQuantity: product.productItemQuantityInStock,
+      selectedVariations: product.variations.map(v => ({
         variationName: v.variationName,
         selectedOption: v.options
       }))
@@ -294,7 +292,7 @@ export class EcommerceHomeComponent implements OnInit, OnDestroy {
     this.messageService.add({
       severity: 'success',
       summary: 'Agregado al carrito',
-      detail: `${product.productName} ha sido agregado al carrito`,
+      detail: `${product.productItemSKU} ha sido agregado al carrito`,
       life: 3000
     });
   }
@@ -330,19 +328,16 @@ export class EcommerceHomeComponent implements OnInit, OnDestroy {
    * Get product price display
    */
   getProductPrice(product: EcommerceProduct): number {
-    if (!product.responseProductItemDetails.length) return 0;
-
-    const prices = product.responseProductItemDetails.map(item => item.productItemPrice);
-    return Math.min(...prices);
+    return product.productItemPrice;
   }
 
   /**
    * Get product price range display
    */
   getProductPriceRange(product: EcommerceProduct): string {
-    if (!product.responseProductItemDetails.length) return 'N/A';
+    if (!product) return 'N/A';
 
-    const prices = product.responseProductItemDetails.map(item => item.productItemPrice);
+    const prices = [product.productItemPrice];
     const minPrice = Math.min(...prices);
     const maxPrice = Math.max(...prices);
 
@@ -357,7 +352,7 @@ export class EcommerceHomeComponent implements OnInit, OnDestroy {
    * Check if product has discount
    */
   hasDiscount(product: EcommerceProduct): boolean {
-    return product.responseCategory?.promotionDTOList?.length > 0;
+    return false;
   }
 
   /**
@@ -366,8 +361,8 @@ export class EcommerceHomeComponent implements OnInit, OnDestroy {
   getDiscountPercentage(product: EcommerceProduct): number {
     if (!this.hasDiscount(product)) return 0;
 
-    const promotion = product.responseCategory.promotionDTOList[0];
-    return Math.round(promotion.promotionDiscountRate * 100);
+    const promotion = 0.5;
+    return Math.round(promotion * 100);
   }
 
   /**
@@ -394,7 +389,7 @@ export class EcommerceHomeComponent implements OnInit, OnDestroy {
     if (!this.hasDiscount(product)) return this.getProductPrice(product);
 
     const originalPrice = this.getProductPrice(product);
-    const discountRate = product.responseCategory.promotionDTOList[0].promotionDiscountRate;
+    const discountRate = 0.5;
 
     return originalPrice * (1 - discountRate);
   }
@@ -457,17 +452,14 @@ export class EcommerceHomeComponent implements OnInit, OnDestroy {
    * Check if product is in stock
    */
   isProductInStock(product: EcommerceProduct): boolean {
-    return product.responseProductItemDetails.some(item => item.productItemQuantityInStock > 0);
+    return product.productItemQuantityInStock > 0;
   }
 
   /**
    * Get total stock for product
    */
   getProductStock(product: EcommerceProduct): number {
-    return product.responseProductItemDetails.reduce(
-      (total, item) => total + item.productItemQuantityInStock,
-      0
-    );
+    return product.productItemQuantityInStock;
   }
 
   /**

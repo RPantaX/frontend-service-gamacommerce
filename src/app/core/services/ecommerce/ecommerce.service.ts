@@ -109,7 +109,7 @@ export class EcommerceService {
       pageNumber: 0
     };
     return this.filterProducts(filter).pipe(
-      map(response => response.responseProductList.filter(p => p.productId !== productId))
+      map(response => response.responseProductList.filter(p => p.productItemId !== productId))
     );
   }
 

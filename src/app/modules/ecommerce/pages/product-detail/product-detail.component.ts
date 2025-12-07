@@ -192,30 +192,18 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     this.productImages = [];
 
     // Add main product image
-    if (this.product.productImage) {
+    if (this.product.productItemImage) {
       this.productImages.push({
-        src: this.product.productImage,
-        alt: this.product.productName,
-        thumbnail: this.product.productImage
+        src: this.product.productItemImage,
+        alt: this.product.productItemSKU,
+        thumbnail: this.product.productItemImage
       });
     }
-
-    // Add item images
-    this.product.responseProductItemDetails.forEach(item => {
-      if (item.productItemImage && !this.productImages.find(img => img.src === item.productItemImage)) {
-        this.productImages.push({
-          src: item.productItemImage,
-          alt: `${this.product!.productName} - ${this.getItemVariationText(item)}`,
-          thumbnail: item.productItemImage
-        });
-      }
-    });
-
     // Add placeholder if no images
     if (this.productImages.length === 0) {
       this.productImages.push({
         src: 'assets/images/product-placeholder.jpg',
-        alt: this.product.productName,
+        alt: this.product.productItemSKU,
         thumbnail: 'assets/images/product-placeholder.jpg'
       });
     }
@@ -225,18 +213,16 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
    * Setup variation groups
    */
   private setupVariations(): void {
-    if (!this.product?.responseProductItemDetails.length) return;
+    if (!this.product) return;
 
     const variationMap = new Map<string, Set<string>>();
 
     // Collect all variations and their options
-    this.product.responseProductItemDetails.forEach(item => {
-      item.variations.forEach(variation => {
+    this.product.variations.forEach(variation => {
         if (!variationMap.has(variation.variationName)) {
           variationMap.set(variation.variationName, new Set());
         }
         variationMap.get(variation.variationName)!.add(variation.options);
-      });
     });
 
     // Create variation groups
@@ -277,18 +263,8 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
    * Select default item (first available)
    */
   private selectDefaultItem(): void {
-    if (!this.product?.responseProductItemDetails.length) return;
-
-    const availableItem = this.product.responseProductItemDetails.find(
-      item => item.productItemQuantityInStock > 0
-    );
-
-    if (availableItem) {
-      this.selectItem(availableItem);
-    } else {
-      // No items in stock, select first one
-      this.selectItem(this.product.responseProductItemDetails[0]);
-    }
+    if (!this.product) return;
+    this.selectItem(this.product);
   }
 
   /**
@@ -341,11 +317,10 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   private findMatchingItem(): ProductItemDetail | null {
     if (!this.product) return null;
 
-    return this.product.responseProductItemDetails.find(item => {
-      return item.variations.every(variation =>
+     this.product!.variations.every(variation =>
         this.selectedVariations[variation.variationName] === variation.options
       );
-    }) || null;
+      return this.product;
   }
 
   /**
@@ -359,12 +334,10 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
         tempSelection[group.name] = option.value;
 
         // Check if there's an available item with this combination
-        const hasAvailableItem = this.product!.responseProductItemDetails.some(item => {
-          const matches = item.variations.every(variation =>
+        const matches = this.product!.variations.every(variation =>
             tempSelection[variation.variationName] === variation.options
           );
-          return matches && item.productItemQuantityInStock > 0;
-        });
+        let hasAvailableItem = matches && this.product!.productItemQuantityInStock > 0;
 
         option.available = hasAvailableItem;
       });
@@ -375,12 +348,10 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
    * Check if variation option is available
    */
   private isVariationOptionAvailable(variationName: string, value: string): boolean {
-    return this.product!.responseProductItemDetails.some(item => {
-      const hasVariation = item.variations.some(v =>
+    const hasVariation = this.product!.variations.some(v =>
         v.variationName === variationName && v.options === value
       );
-      return hasVariation && item.productItemQuantityInStock > 0;
-    });
+      return hasVariation && this.product!.productItemQuantityInStock > 0;
   }
 
   /**
@@ -388,12 +359,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
    */
   private getItemsForVariation(variationName: string, value: string): ProductItemDetail[] {
     if (!this.product) return [];
-
-    return this.product.responseProductItemDetails.filter(item =>
-      item.variations.some(v =>
-        v.variationName === variationName && v.options === value
-      )
-    );
+    return [this.product];
   }
 
 
@@ -406,8 +372,8 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     this.loadingRelated = true;
 
     this.ecommerceService.getRelatedProducts(
-      this.product.productId,
-      this.product.responseCategory.productCategoryId,
+      this.product.productItemId,
+      1,
       4
     ).pipe(
       takeUntil(this.destroy$)
@@ -433,11 +399,11 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
       { label: 'Inicio', routerLink: '/ecommerce/home' },
       { label: 'Productos', routerLink: '/ecommerce/products' },
       {
-        label: this.product.responseCategory.productCategoryName,
+        label: 'Categoria de prueba',
         routerLink: '/ecommerce/products',
-        queryParams: { category: this.product.responseCategory.productCategoryId }
+        queryParams: { category: 1 }
       },
-      { label: this.product.productName }
+      { label: this.product.productItemSKU }
     ];
   }
 
@@ -477,11 +443,11 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     const cartItem: CartItem = {
       id: this.selectedItem.productItemId,
       type: 'product',
-      productId: this.product.productId,
+      productId: this.product.productItemId,
       productItemId: this.selectedItem.productItemId,
-      name: this.product.productName,
-      description: this.product.productDescription,
-      image: this.selectedItem.productItemImage || this.product.productImage,
+      name: this.product.productItemSKU,
+      description: 'Descripción del producto de prueba',
+      image: this.selectedItem.productItemImage,
       price: this.getDiscountedPrice(),
       originalPrice: this.selectedItem.productItemPrice,
       quantity: this.selectedQuantity,
@@ -499,7 +465,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     this.messageService.add({
       severity: 'success',
       summary: 'Agregado al carrito',
-      detail: `${this.selectedQuantity} ${this.product.productName} agregado al carrito`,
+      detail: `${this.selectedQuantity} ${this.product.productItemSKU} agregado al carrito`,
       life: 3000
     });
 
@@ -533,7 +499,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     if (!this.product) return;
 
     if (this.isInWishlist) {
-      this.ecommerceService.removeFromWishlist(this.product.productId);
+      this.ecommerceService.removeFromWishlist(this.product.productItemId);
       this.isInWishlist = false;
       this.messageService.add({
         severity: 'info',
@@ -542,7 +508,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
         life: 3000
       });
     } else {
-      this.ecommerceService.addToWishlist(this.product.productId);
+      this.ecommerceService.addToWishlist(this.product.productItemId);
       this.isInWishlist = true;
       this.messageService.add({
         severity: 'success',
@@ -557,7 +523,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
    * Navigate to related product
    */
   goToRelatedProduct(product: EcommerceProduct): void {
-    this.router.navigate(['/ecommerce/products', product.productId]);
+    this.router.navigate(['/ecommerce/products', product.productItemId]);
   }
 
   /**
@@ -585,24 +551,14 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
    * Check if product has discount
    */
   hasDiscount(): boolean {
-    if (!this.product || !this.product.responseCategory) {
-      return false;
-    }
-    return !!(this.product.responseCategory.promotionDTOList &&
-              this.product.responseCategory.promotionDTOList.length > 0);
+    return true;
   }
 
   /**
    * Get discount percentage
    */
   getDiscountPercentage(): number {
-    if (!this.hasDiscount() || !this.product) return 0;
-
-    const promotions = this.product.responseCategory.promotionDTOList;
-    if (!promotions || promotions.length === 0) return 0;
-
-    const promotion = promotions[0];
-    return Math.round(promotion.promotionDiscountRate);
+    return Math.round(0.2);
   }
 
   /**
@@ -620,10 +576,8 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
 
     if (!this.hasDiscount() || !this.product) return originalPrice;
 
-    const promotions = this.product.responseCategory.promotionDTOList;
-    if (!promotions || promotions.length === 0) return originalPrice;
 
-    const discountRate = promotions[0].promotionDiscountRate / 100; // Convertir porcentaje
+    const discountRate = 0.2; // Convertir porcentaje
     return originalPrice * (1 - discountRate);
   }
 
@@ -700,10 +654,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
    * Get minimum price for related product
    */
   getMinPrice(product: EcommerceProduct): number {
-    if (!product.responseProductItemDetails.length) return 0;
-
-    const prices = product.responseProductItemDetails.map(item => item.productItemPrice);
-    return Math.min(...prices);
+    return product.productItemPrice
   }
 
   /**
@@ -723,8 +674,8 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   shareProduct(): void {
     if (navigator.share && this.product) {
       navigator.share({
-        title: this.product.productName,
-        text: this.product.productDescription,
+        title: this.product.productItemSKU,
+        text: 'Descubre este producto en AngieBraids',
         url: window.location.href
       }).catch(err => {
         console.log('Error sharing:', err);
@@ -813,14 +764,14 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     return {
       '@context': 'https://schema.org/',
       '@type': 'Product',
-      'name': this.product.productName,
-      'description': this.product.productDescription,
+      'name': this.product.productItemSKU,
+      'description': 'Descubre este producto en AngieBraids',
       'image': this.productImages.map(img => img.src),
       'brand': {
         '@type': 'Brand',
         'name': 'AngieBraids'
       },
-      'category': this.product.responseCategory.productCategoryName,
+      'category': 'Categoria de prueba',
       'sku': this.selectedItem.productItemSKU,
       'offers': {
         '@type': 'Offer',
@@ -858,7 +809,7 @@ getVariationOptionsText(options: VariationOption[]): string {
  * Check if related product has promotions
  */
 hasPromotions(relatedProduct: EcommerceProduct): boolean {
-  return !!(relatedProduct?.responseCategory?.promotionDTOList?.length);
+  return true;
 }
 
 // 4. Método mejorado para manejar gtag de manera segura
@@ -877,9 +828,9 @@ hasPromotions(relatedProduct: EcommerceProduct): boolean {
         'currency': 'PEN',
         'value': this.getDiscountedPrice(),
         'items': [{
-          'item_id': this.product.productId.toString(),
-          'item_name': this.product.productName,
-          'category': this.product.responseCategory.productCategoryName,
+          'item_id': this.product.productItemId.toString(),
+          'item_name': this.product.productItemSKU,
+          'category': 'Categoria de prueba',
           'price': this.getDiscountedPrice(),
           'quantity': 1
         }]
@@ -891,9 +842,9 @@ hasPromotions(relatedProduct: EcommerceProduct): boolean {
 
   // Custom analytics
   console.log('Product viewed:', {
-    productId: this.product.productId,
-    productName: this.product.productName,
-    category: this.product.responseCategory.productCategoryName,
+    productId: this.product.productItemId,
+    productName: this.product.productItemSKU,
+    category: 'Categoria de prueba',
     price: this.getDiscountedPrice()
   });
 }

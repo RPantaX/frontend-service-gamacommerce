@@ -60,13 +60,13 @@
             <div class="product-category">
               <span class="category-link"
                     [routerLink]="['/ecommerce/products']"
-                    [queryParams]="{category: 1}">
-                Categoria de prueba
+                    [queryParams]="{category: product.responseCategory.productCategoryId}">
+                {{ product.responseCategory.productCategoryName }}
               </span>
             </div>
 
             <!-- Product Name -->
-            <h1 class="product-name">{{ product.productItemSKU }}</h1>
+            <h1 class="product-name">{{ product.productName }}</h1>
 
             <!-- Rating -->
             <div class="product-rating" *ngIf="averageRating > 0">
@@ -109,7 +109,7 @@
 
             <!-- Product Description -->
             <div class="product-description">
-              <p>Descripcion del producto de prueba</p>
+              <p>{{ product.productDescription }}</p>
             </div>
 
             <!-- Variations -->
@@ -204,20 +204,20 @@
             </div>
 
             <!-- Promotions -->
-            <div class="product-promotions" *ngIf="true">
+            <div class="product-promotions" *ngIf="product.responseCategory.promotionDTOList.length > 0">
               <h4 class="promotions-title">
                 <i class="pi pi-tag"></i>
                 Ofertas Especiales
               </h4>
               <div class="promotion-list">
-                <div class="promotion-item" *ngFor="true">
+                <div class="promotion-item" *ngFor="let promotion of product.responseCategory.promotionDTOList">
                   <div class="promotion-header">
-                    <span class="promotion-name">Promoción de prueba</span>
-                    <span class="promotion-discount">-20%</span>
+                    <span class="promotion-name">{{ promotion.promotionName }}</span>
+                    <span class="promotion-discount">-{{ (promotion.promotionDiscountRate * 100).toFixed(0) }}%</span>
                   </div>
-                  <p class="promotion-description">Descripcion de la promoción de prueba</p>
-                  <div class="promotion-dates" *ngIf="true">
-                    <small>Válido hasta: 31/12/2024</small>
+                  <p class="promotion-description">{{ promotion.promotionDescription }}</p>
+                  <div class="promotion-dates" *ngIf="promotion.promotionEndDate">
+                    <small>Válido hasta: {{ promotion.promotionEndDate | date:'dd/MM/yyyy' }}</small>
                   </div>
                 </div>
               </div>
@@ -261,14 +261,16 @@
           <div class="tab-content description-content">
             <h3>Sobre este producto</h3>
             <div class="description-text">
-              <p>Descripcion del producto de prueba</p>
+              <p>{{ product.productDescription }}</p>
 
               <!-- Additional product details -->
-              <div class="product-highlights" *ngIf="product">
+              <div class="product-highlights" *ngIf="product.responseProductItemDetails.length > 0">
                 <h4>Características principales:</h4>
                 <ul>
-                    <strong>{{ getItemVariationText(product) }}:</strong>
-                    SKU {{ product.productItemSKU }} - {{ product.productItemQuantityInStock }} disponibles
+                  <li *ngFor="let item of product.responseProductItemDetails.slice(0, 3)">
+                    <strong>{{ getItemVariationText(item) }}:</strong>
+                    SKU {{ item.productItemSKU }} - {{ item.productItemQuantityInStock }} disponibles
+                  </li>
                 </ul>
               </div>
 
@@ -289,7 +291,7 @@
             <div class="specifications-table">
               <div class="spec-row">
                 <span class="spec-label">Categoría:</span>
-                <span class="spec-value">Descripcion de prueba</span>
+                <span class="spec-value">{{ product.responseCategory.productCategoryName }}</span>
               </div>
 
               <div class="spec-row" *ngIf="selectedItem">
@@ -486,8 +488,8 @@
               <!-- Product Image -->
               <div class="related-product-image">
                 <img
-                  [src]="relatedProduct.productItemImage || 'assets/images/product-placeholder.jpg'"
-                  [alt]="relatedProduct.productItemSKU"
+                  [src]="relatedProduct.productImage || 'assets/images/product-placeholder.jpg'"
+                  [alt]="relatedProduct.productName"
                   loading="lazy" />
 
                 <!-- Badges -->
@@ -503,9 +505,9 @@
               <!-- Product Info -->
               <div class="related-product-info">
                 <div class="related-product-category">
-                  Categoria de prueba
+                  {{ relatedProduct?.responseCategory?.productCategoryName }}
                 </div>
-                <h4 class="related-product-name">{{ relatedProduct.productItemSKU }}</h4>
+                <h4 class="related-product-name">{{ relatedProduct.productName }}</h4>
 
                 <div class="related-product-pricing">
                   <span class="related-current-price">
@@ -531,7 +533,7 @@
     (onHide)="closeImageGallery()">
 
     <ng-template pTemplate="header">
-      <span>{{ product?.productItemSKU }} - Galería</span>
+      <span>{{ product?.productName }} - Galería</span>
     </ng-template>
 
     <div class="gallery-content">

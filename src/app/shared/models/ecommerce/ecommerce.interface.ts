@@ -4,18 +4,35 @@
 
 export interface EcommerceProduct {
   productItemId: number;
+  productId: number;
+  productName: string;
+  productDescription: string;
   productItemSKU: string;
   productItemQuantityInStock: number;
   productItemImage?: string;
   productItemPrice: number;
   variations: ProductVariation[];
+  responseCategory?: ProductCategory;
   // Campos adicionales para e-commerce
   featured?: boolean;
   newProduct?: boolean;
   rating?: number;
   reviewCount?: number;
 }
-
+export interface EcommerceProductDetail {
+  productId: number;
+  productName: string;
+  productDescription: string;
+  productImage?: string;
+  responseCategory: ProductCategory;
+  responseProductItemDetails: ProductItemDetail[];
+  promotionDTOList: Promotion[];
+  // Campos adicionales para e-commerce
+  featured?: boolean;
+  newProduct?: boolean;
+  rating?: number;
+  reviewCount?: number;
+}
 export interface ProductCategory {
   productCategoryId: number;
   productCategoryName: string;
@@ -187,6 +204,14 @@ export interface EcommerceProductResponse {
   totalElements: number;
   end: boolean;
 }
+export interface EcommerceProductResponseDetail {
+  responseProductList: EcommerceProductDetail[];
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+  totalElements: number;
+  end: boolean;
+}
 
 export interface EcommerceServiceResponse {
   responseServiceList: EcommerceInterfaceService[];
@@ -252,8 +277,8 @@ export interface EmployeeOption {
 // INTERFACES PARA DETALLES DE PRODUCTO/SERVICIO
 // ============================================================================
 
-export interface ProductDetail extends EcommerceProduct {
-  relatedProducts?: EcommerceProduct[];
+export interface ProductDetail extends EcommerceProductDetail {
+  relatedProducts?: EcommerceProductDetail[];
   reviews?: Review[];
   averageRating?: number;
   specifications?: ProductSpecification[];

@@ -77,13 +77,13 @@
             <ng-template pTemplate="header">
               <div class="base-product-header">
                 <img
-                  [src]="baseProduct.productImage || 'assets/images/product-placeholder.jpg'"
+                  [src]="baseProduct.productItemImage || 'assets/images/product-placeholder.jpg'"
                   [alt]="baseProduct.productName"
                   class="base-product-image" />
 
                 <div class="base-product-header-text">
                   <div class="product-category">
-                    {{ baseProduct.responseCategory.productCategoryName || 'Sin categoría' }}
+                    {{ baseProduct.responseCategory?.productCategoryName || 'Sin categoría' }}
                   </div>
                   <h2 class="product-name">
                     {{ baseProduct.productName }}
@@ -152,18 +152,18 @@
               <!-- Variantes principales -->
               <div
                 class="variants-section"
-                *ngIf="baseProduct.responseProductItemDetails.length">
+                *ngIf="baseProduct.variations.length > 0">
                 <h3>Variantes del producto</h3>
                 <div class="variant-chips">
                   <span
                     class="variant-chip"
-                    *ngFor="let item of baseProduct.responseProductItemDetails | slice:0:3">
+                    *ngFor="let item of baseProduct.variations | slice:0:3">
                     {{ getVariationSummary(item) }}
                   </span>
                   <span
                     class="variant-chip more"
-                    *ngIf="baseProduct.responseProductItemDetails.length > 3">
-                    +{{ baseProduct.responseProductItemDetails.length - 3 }} más
+                    *ngIf="baseProduct.variations.length > 3">
+                    +{{ baseProduct.variations.length - 3 }} más
                   </span>
                 </div>
               </div>
@@ -205,7 +205,7 @@
           <div class="product-name-cell">
             <strong>{{ p.productName }}</strong>
             <div class="muted">
-              {{ p.responseCategory.productCategoryName }}
+              {{ p.responseCategory?.productCategoryName || 'Sin categoría' }}
             </div>
           </div>
         </td>

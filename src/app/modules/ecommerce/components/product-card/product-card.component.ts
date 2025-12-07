@@ -8,8 +8,8 @@ import { EcommerceProduct } from '../../../../shared/models/ecommerce/ecommerce.
       <!-- Product Image -->
       <div class="product-image-container">
         <img
-          [src]="product.productItemImage"
-          [alt]="product.productItemSKU"
+          [src]="product.productItemImage || 'assets/images/product-placeholder.jpg'"
+          [alt]="product.productName"
           class="product-image"
           (click)="viewDetails()" />
 
@@ -50,10 +50,10 @@ import { EcommerceProduct } from '../../../../shared/models/ecommerce/ecommerce.
       <!-- Product Info -->
       <div class="product-info" (click)="viewDetails()">
         <div class="product-category">
-          {{ 'Categoria en construccion' }}
+          {{ product.responseCategory?.productCategoryName || 'Sin categoría' }}
 
         </div>
-        <h3 class="product-name">{{ product.productItemSKU }}</h3>
+        <h3 class="product-name">{{ product.productName }}</h3>
 
         <div class="product-rating" *ngIf="product.rating && product.rating > 0">
           <p-rating
@@ -129,7 +129,7 @@ export class ProductCardComponent {
    * Check if product has discount
    */
   hasDiscount(): boolean {
-    return true;
+    return this.product.responseCategory!.promotionDTOList?.length > 0;
   }
 
   /**
@@ -137,8 +137,8 @@ export class ProductCardComponent {
    */
   getDiscountPercentage(): number {
     if (!this.hasDiscount()) return 0;
-    const promotion = 0.2;
-    return Math.round(promotion * 100);
+    const promotion = this.product.responseCategory?.promotionDTOList?.[0];
+    return Math.round(promotion!.promotionDiscountRate * 100);
   }
 
   /**
@@ -155,7 +155,7 @@ export class ProductCardComponent {
     const originalPrice = this.getOriginalPrice();
     if (!this.hasDiscount()) return originalPrice;
 
-    const discountRate = 0.2;
+    const discountRate = this.product!.responseCategory!.promotionDTOList[0].promotionDiscountRate;
     return originalPrice * (1 - discountRate);
   }
 

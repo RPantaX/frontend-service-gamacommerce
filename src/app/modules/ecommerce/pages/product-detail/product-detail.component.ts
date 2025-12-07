@@ -10,7 +10,8 @@ import {
   ProductItemDetail,
   ProductVariation,
   SelectedVariation,
-  Review
+  Review,
+  EcommerceProductDetail
 } from '../../../../shared/models/ecommerce/ecommerce.interface';
 declare var gtag: Function;
 interface VariationGroup {
@@ -46,7 +47,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
 
   // Data
   product: ProductDetail | null = null;
-  relatedProducts: EcommerceProduct[] = [];
+  relatedProducts: EcommerceProductDetail[] = [];
   selectedItem: ProductItemDetail | null = null;
 
   // Variations
@@ -192,18 +193,30 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     this.productImages = [];
 
     // Add main product image
-    if (this.product.productItemImage) {
+    if (this.product.productImage) {
       this.productImages.push({
-        src: this.product.productItemImage,
-        alt: this.product.productItemSKU,
-        thumbnail: this.product.productItemImage
+        src: this.product.productImage,
+        alt: this.product.productName,
+        thumbnail: this.product.productImage
       });
     }
+
+    // Add item images
+    this.product.responseProductItemDetails.forEach(item => {
+      if (item.productItemImage && !this.productImages.find(img => img.src === item.productItemImage)) {
+        this.productImages.push({
+          src: item.productItemImage,
+          alt: `${this.product!.productName} - ${this.getItemVariationText(item)}`,
+          thumbnail: item.productItemImage
+        });
+      }
+    });
+
     // Add placeholder if no images
     if (this.productImages.length === 0) {
       this.productImages.push({
         src: 'assets/images/product-placeholder.jpg',
-        alt: this.product.productItemSKU,
+        alt: this.product.productName,
         thumbnail: 'assets/images/product-placeholder.jpg'
       });
     }
@@ -213,16 +226,18 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
    * Setup variation groups
    */
   private setupVariations(): void {
-    if (!this.product) return;
+    if (!this.product?.responseProductItemDetails.length) return;
 
     const variationMap = new Map<string, Set<string>>();
 
     // Collect all variations and their options
-    this.product.variations.forEach(variation => {
+    this.product.responseProductItemDetails.forEach(item => {
+      item.variations.forEach(variation => {
         if (!variationMap.has(variation.variationName)) {
           variationMap.set(variation.variationName, new Set());
         }
         variationMap.get(variation.variationName)!.add(variation.options);
+      });
     });
 
     // Create variation groups
@@ -263,8 +278,18 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
    * Select default item (first available)
    */
   private selectDefaultItem(): void {
-    if (!this.product) return;
-    this.selectItem(this.product);
+    if (!this.product?.responseProductItemDetails.length) return;
+
+    const availableItem = this.product.responseProductItemDetails.find(
+      item => item.productItemQuantityInStock > 0
+    );
+
+    if (availableItem) {
+      this.selectItem(availableItem);
+    } else {
+      // No items in stock, select first one
+      this.selectItem(this.product.responseProductItemDetails[0]);
+    }
   }
 
   /**
@@ -317,10 +342,11 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   private findMatchingItem(): ProductItemDetail | null {
     if (!this.product) return null;
 
-     this.product!.variations.every(variation =>
+    return this.product.responseProductItemDetails.find(item => {
+      return item.variations.every(variation =>
         this.selectedVariations[variation.variationName] === variation.options
       );
-      return this.product;
+    }) || null;
   }
 
   /**
@@ -334,10 +360,12 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
         tempSelection[group.name] = option.value;
 
         // Check if there's an available item with this combination
-        const matches = this.product!.variations.every(variation =>
+        const hasAvailableItem = this.product!.responseProductItemDetails.some(item => {
+          const matches = item.variations.every(variation =>
             tempSelection[variation.variationName] === variation.options
           );
-        let hasAvailableItem = matches && this.product!.productItemQuantityInStock > 0;
+          return matches && item.productItemQuantityInStock > 0;
+        });
 
         option.available = hasAvailableItem;
       });
@@ -348,10 +376,12 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
    * Check if variation option is available
    */
   private isVariationOptionAvailable(variationName: string, value: string): boolean {
-    const hasVariation = this.product!.variations.some(v =>
+    return this.product!.responseProductItemDetails.some(item => {
+      const hasVariation = item.variations.some(v =>
         v.variationName === variationName && v.options === value
       );
-      return hasVariation && this.product!.productItemQuantityInStock > 0;
+      return hasVariation && item.productItemQuantityInStock > 0;
+    });
   }
 
   /**
@@ -359,7 +389,12 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
    */
   private getItemsForVariation(variationName: string, value: string): ProductItemDetail[] {
     if (!this.product) return [];
-    return [this.product];
+
+    return this.product.responseProductItemDetails.filter(item =>
+      item.variations.some(v =>
+        v.variationName === variationName && v.options === value
+      )
+    );
   }
 
 
@@ -372,8 +407,8 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     this.loadingRelated = true;
 
     this.ecommerceService.getRelatedProducts(
-      this.product.productItemId,
-      1,
+      this.product.productId,
+      this.product.responseCategory.productCategoryId,
       4
     ).pipe(
       takeUntil(this.destroy$)
@@ -399,11 +434,11 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
       { label: 'Inicio', routerLink: '/ecommerce/home' },
       { label: 'Productos', routerLink: '/ecommerce/products' },
       {
-        label: 'Categoria de prueba',
+        label: this.product.responseCategory.productCategoryName,
         routerLink: '/ecommerce/products',
-        queryParams: { category: 1 }
+        queryParams: { category: this.product.responseCategory.productCategoryId }
       },
-      { label: this.product.productItemSKU }
+      { label: this.product.productName }
     ];
   }
 
@@ -443,11 +478,11 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     const cartItem: CartItem = {
       id: this.selectedItem.productItemId,
       type: 'product',
-      productId: this.product.productItemId,
+      productId: this.product.productId,
       productItemId: this.selectedItem.productItemId,
-      name: this.product.productItemSKU,
-      description: 'Descripción del producto de prueba',
-      image: this.selectedItem.productItemImage,
+      name: this.product.productName,
+      description: this.product.productDescription,
+      image: this.selectedItem.productItemImage || this.product.productImage,
       price: this.getDiscountedPrice(),
       originalPrice: this.selectedItem.productItemPrice,
       quantity: this.selectedQuantity,
@@ -465,7 +500,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     this.messageService.add({
       severity: 'success',
       summary: 'Agregado al carrito',
-      detail: `${this.selectedQuantity} ${this.product.productItemSKU} agregado al carrito`,
+      detail: `${this.selectedQuantity} ${this.product.productName} agregado al carrito`,
       life: 3000
     });
 
@@ -499,7 +534,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     if (!this.product) return;
 
     if (this.isInWishlist) {
-      this.ecommerceService.removeFromWishlist(this.product.productItemId);
+      this.ecommerceService.removeFromWishlist(this.product.productId);
       this.isInWishlist = false;
       this.messageService.add({
         severity: 'info',
@@ -508,7 +543,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
         life: 3000
       });
     } else {
-      this.ecommerceService.addToWishlist(this.product.productItemId);
+      this.ecommerceService.addToWishlist(this.product.productId);
       this.isInWishlist = true;
       this.messageService.add({
         severity: 'success',
@@ -522,8 +557,8 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   /**
    * Navigate to related product
    */
-  goToRelatedProduct(product: EcommerceProduct): void {
-    this.router.navigate(['/ecommerce/products', product.productItemId]);
+  goToRelatedProduct(product: EcommerceProductDetail): void {
+    this.router.navigate(['/ecommerce/products', product.productId]);
   }
 
   /**
@@ -551,14 +586,24 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
    * Check if product has discount
    */
   hasDiscount(): boolean {
-    return true;
+    if (!this.product || !this.product.responseCategory) {
+      return false;
+    }
+    return !!(this.product.responseCategory.promotionDTOList &&
+              this.product.responseCategory.promotionDTOList.length > 0);
   }
 
   /**
    * Get discount percentage
    */
   getDiscountPercentage(): number {
-    return Math.round(0.2);
+    if (!this.hasDiscount() || !this.product) return 0;
+
+    const promotions = this.product.responseCategory.promotionDTOList;
+    if (!promotions || promotions.length === 0) return 0;
+
+    const promotion = promotions[0];
+    return Math.round(promotion.promotionDiscountRate);
   }
 
   /**
@@ -576,8 +621,10 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
 
     if (!this.hasDiscount() || !this.product) return originalPrice;
 
+    const promotions = this.product.responseCategory.promotionDTOList;
+    if (!promotions || promotions.length === 0) return originalPrice;
 
-    const discountRate = 0.2; // Convertir porcentaje
+    const discountRate = promotions[0].promotionDiscountRate; // Convertir porcentaje
     return originalPrice * (1 - discountRate);
   }
 
@@ -653,8 +700,11 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   /**
    * Get minimum price for related product
    */
-  getMinPrice(product: EcommerceProduct): number {
-    return product.productItemPrice
+  getMinPrice(product: EcommerceProductDetail): number {
+    if (!product.responseProductItemDetails.length) return 0;
+
+    const prices = product.responseProductItemDetails.map(item => item.productItemPrice);
+    return Math.min(...prices);
   }
 
   /**
@@ -662,8 +712,15 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
    */
   getItemVariationText(item: ProductItemDetail): string {
     if (!item.variations || !item.variations.length) return 'Estándar';
-
-    return item.variations
+    // Usar un Set para evitar repeticiones exactas
+    const seen = new Set<string>();
+    const uniqueVariations = item.variations.filter(v => {
+      const key = `${v.variationName}:${v.options}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    return uniqueVariations
       .map(v => `${v.variationName}: ${v.options}`)
       .join(', ');
   }
@@ -674,8 +731,8 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   shareProduct(): void {
     if (navigator.share && this.product) {
       navigator.share({
-        title: this.product.productItemSKU,
-        text: 'Descubre este producto en AngieBraids',
+        title: this.product.productName,
+        text: this.product.productDescription,
         url: window.location.href
       }).catch(err => {
         console.log('Error sharing:', err);
@@ -764,14 +821,14 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     return {
       '@context': 'https://schema.org/',
       '@type': 'Product',
-      'name': this.product.productItemSKU,
-      'description': 'Descubre este producto en AngieBraids',
+      'name': this.product.productName,
+      'description': this.product.productDescription,
       'image': this.productImages.map(img => img.src),
       'brand': {
         '@type': 'Brand',
         'name': 'AngieBraids'
       },
-      'category': 'Categoria de prueba',
+      'category': this.product.responseCategory.productCategoryName,
       'sku': this.selectedItem.productItemSKU,
       'offers': {
         '@type': 'Offer',
@@ -808,8 +865,8 @@ getVariationOptionsText(options: VariationOption[]): string {
 /**
  * Check if related product has promotions
  */
-hasPromotions(relatedProduct: EcommerceProduct): boolean {
-  return true;
+hasPromotions(relatedProduct: EcommerceProductDetail): boolean {
+  return !!(relatedProduct?.responseCategory?.promotionDTOList?.length);
 }
 
 // 4. Método mejorado para manejar gtag de manera segura
@@ -828,9 +885,9 @@ hasPromotions(relatedProduct: EcommerceProduct): boolean {
         'currency': 'PEN',
         'value': this.getDiscountedPrice(),
         'items': [{
-          'item_id': this.product.productItemId.toString(),
-          'item_name': this.product.productItemSKU,
-          'category': 'Categoria de prueba',
+          'item_id': this.product.productId.toString(),
+          'item_name': this.product.productName,
+          'category': this.product.responseCategory.productCategoryName,
           'price': this.getDiscountedPrice(),
           'quantity': 1
         }]
@@ -842,9 +899,9 @@ hasPromotions(relatedProduct: EcommerceProduct): boolean {
 
   // Custom analytics
   console.log('Product viewed:', {
-    productId: this.product.productItemId,
-    productName: this.product.productItemSKU,
-    category: 'Categoria de prueba',
+    productId: this.product.productId,
+    productName: this.product.productName,
+    category: this.product.responseCategory.productCategoryName,
     price: this.getDiscountedPrice()
   });
 }

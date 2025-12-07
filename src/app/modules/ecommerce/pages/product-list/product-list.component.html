@@ -299,8 +299,8 @@
                   <!-- Product Image -->
                   <div class="product-image-container">
                     <img
-                      [src]="product.productItemImage"
-                      [alt]="product.productItemSKU"
+                      [src]="product.productItemImage || 'assets/images/product-1.png'"
+                      [alt]="product.productName"
                       class="product-image"
                       (click)="goToProductDetail(product)"
                       loading="lazy" />
@@ -308,7 +308,7 @@
                     <!-- Product Badges -->
                     <div class="product-badges">
                       <span
-                        *ngIf="true"
+                        *ngIf="product.responseCategory?.promotionDTOList?.length && product.responseCategory!.promotionDTOList.length > 0"
                         class="badge discount-badge">
                         -{{ getDiscountPercentage(product) }}%
                       </span>
@@ -348,9 +348,9 @@
                   <!-- Product Info -->
                   <div class="product-info" (click)="goToProductDetail(product)">
                     <div class="product-category">
-                      {{ 'Categoria en construccion' }}
+                      {{ product.responseCategory!.productCategoryName || 'Sin categoría' }}
                     </div>
-                    <h3 class="product-name">{{ product.productItemSKU }}</h3>
+                    <h3 class="product-name">{{ product.productName }}</h3>
 
                     <div class="product-rating" *ngIf="product.rating && product.rating > 0">
                       <p-rating
@@ -424,8 +424,8 @@
               <!-- Product Image -->
               <div class="list-product-image">
                 <img
-                  [src]="product.productItemImage"
-                  [alt]="product.productItemSKU"
+                  [src]="product.productItemImage || 'assets/images/product-placeholder.jpg'"
+                  [alt]="product.productName"
                   (click)="goToProductDetail(product)"
                   loading="lazy" />
 
@@ -448,9 +448,9 @@
               <div class="list-product-details" (click)="goToProductDetail(product)">
                 <div class="list-product-header">
                   <div class="product-category">
-                    {{ 'Categoria en construccion' }}
+                    {{ product.responseCategory!.productCategoryName || 'Sin categoría' }}
                   </div>
-                  <h3 class="product-name">{{ product.productItemSKU }}</h3>
+                  <h3 class="product-name">{{ product.productName }}</h3>
 
                   <div class="product-rating" *ngIf="product.rating && product.rating > 0">
                     <p-rating
@@ -464,22 +464,20 @@
                 </div>
 
                 <p class="product-description">
-                  {{ product.productItemSKU }}
+                  {{ product.productDescription }}
                 </p>
 
                 <div class="list-product-meta">
-                  <div class="product-variations" *ngIf="true">
+                  <div class="product-variations" >
                     <span class="variations-label">Variaciones:</span>
                     <div class="variation-chips">
                       <span
-                        class="variation-chip"
-                        *ngFor="let item of products.slice(0, 3)">
-                        {{ getVariationSummary(item) }}
+                        class="variation-chip">
+                        {{ getVariationSummary(product) }}
                       </span>
                       <span
-                        *ngIf="products.length > 3"
                         class="variation-chip more">
-                        +{{ products.length - 3 }} más
+                        +{{ product.variations.length - 3 }} más
                       </span>
                     </div>
                   </div>

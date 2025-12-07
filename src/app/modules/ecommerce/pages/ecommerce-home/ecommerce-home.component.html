@@ -98,8 +98,8 @@
               <!-- Product Image -->
               <div class="product-image-container">
                 <img
-                  [src]="product.productItemImage || 'assets/images/product-placeholder.jpg'"
-                  [alt]="product.productItemSKU"
+                  [src]="product.productImage || 'assets/images/product-placeholder.jpg'"
+                  [alt]="product.productName"
                   class="product-image"
                   (click)="goToProductDetail(product)" />
 
@@ -145,9 +145,9 @@
               <!-- Product Info -->
               <div class="product-info" (click)="goToProductDetail(product)">
                 <div class="product-category">
-                  {{ "Categoria" }}
+                  {{ product.responseCategory?.productCategoryName }}
                 </div>
-                <h3 class="product-name">{{ product.productItemSKU }}</h3>
+                <h3 class="product-name">{{ product.productName }}</h3>
                 <div class="product-rating" *ngIf="getProductRating(product) > 0">
                   <p-rating
                     [(ngModel)]="product.rating"
@@ -225,8 +225,8 @@
           <div class="new-product-card">
             <div class="new-product-image">
               <img
-                [src]="product.productItemImage || 'assets/images/product-placeholder.jpg'"
-                [alt]="product.productItemSKU"
+                [src]="product.productImage || 'assets/images/product-placeholder.jpg'"
+                [alt]="product.productName"
                 (click)="goToProductDetail(product)" />
               <div class="new-product-overlay">
                 <div class="new-product-actions">
@@ -245,8 +245,8 @@
             </div>
             <div class="new-product-info">
               <div class="new-product-details">
-                <h4 class="new-product-name">{{ product.productItemSKU }}</h4>
-                <p class="new-product-category">{{ "Categoria" }}</p>
+                <h4 class="new-product-name">{{ product.productName }}</h4>
+                <p class="new-product-category">{{ product.responseCategory?.productCategoryName }}</p>
                 <p class="new-product-price">S/{{ getProductPrice(product).toFixed(2) }}</p>
               </div>
             </div>

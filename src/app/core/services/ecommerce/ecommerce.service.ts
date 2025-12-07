@@ -15,7 +15,9 @@ import {
   Cart,
   CartItem,
   ProductDetail,
-  ServiceDetail
+  ServiceDetail,
+  EcommerceProductDetail,
+  EcommerceProductResponseDetail
 } from '../../../shared/models/ecommerce/ecommerce.interface';
 
 @Injectable({
@@ -50,6 +52,15 @@ export class EcommerceService {
   filterProducts(filter: EcommerceProductFilter): Observable<EcommerceProductResponse> {
     return this.http.post<ApiResponse<EcommerceProductResponse>>(
       `${this.baseUrlProducts}/filter/company/${this.companyId}`,
+      this.transformProductFilter(filter)
+    ).pipe(
+      map(response => response.data),
+      shareReplay(1)
+    );
+  }
+    filterProductsDetail(filter: EcommerceProductFilter): Observable<EcommerceProductResponseDetail> {
+    return this.http.post<ApiResponse<EcommerceProductResponseDetail>>(
+      `${this.baseUrlProducts}/filter/company/details/${this.companyId}`,
       this.transformProductFilter(filter)
     ).pipe(
       map(response => response.data),
@@ -102,14 +113,14 @@ export class EcommerceService {
   /**
    * Get related products
    */
-  getRelatedProducts(productId: number, categoryId: number, limit: number = 4): Observable<EcommerceProduct[]> {
+  getRelatedProducts(productId: number, categoryId: number, limit: number = 4): Observable<EcommerceProductDetail[]> {
     const filter: EcommerceProductFilter = {
       categoryIds: [categoryId],
       pageSize: limit,
       pageNumber: 0
     };
-    return this.filterProducts(filter).pipe(
-      map(response => response.responseProductList.filter(p => p.productItemId !== productId))
+    return this.filterProductsDetail(filter).pipe(
+      map(response => response.responseProductList.filter(p => p.productId !== productId))
     );
   }
 

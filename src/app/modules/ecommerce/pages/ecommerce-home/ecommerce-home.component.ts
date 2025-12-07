@@ -221,7 +221,7 @@ export class EcommerceHomeComponent implements OnInit, OnDestroy {
    * Navigate to product detail
    */
   goToProductDetail(product: EcommerceProduct): void {
-    this.router.navigate(['ecommerce/products', product.productItemId]);
+    this.router.navigate(['ecommerce/products', product.productId]);
   }
 
   /**
@@ -249,7 +249,7 @@ export class EcommerceHomeComponent implements OnInit, OnDestroy {
    * Add product to cart
    */
   addToCart(product: EcommerceProduct): void {
-    if (!product.productItemQuantityInStock || product.productItemQuantityInStock <= 0) {
+    if (!product.productItemQuantityInStock) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Producto no disponible',
@@ -259,8 +259,10 @@ export class EcommerceHomeComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Use first available item if only one variant
+    const firstItem = product;
 
-    if (product.productItemQuantityInStock <= 0) {
+    if (firstItem.productItemQuantityInStock <= 0) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Sin stock',
@@ -271,17 +273,17 @@ export class EcommerceHomeComponent implements OnInit, OnDestroy {
     }
 
     const cartItem: CartItem = {
-      id: product.productItemId,
+      id: firstItem.productItemId,
       type: 'product',
-      productId: product.productItemId,
-      productItemId: product.productItemId,
-      name: product.productItemSKU,
-      description: "to do",
-      image: product.productItemImage,
-      price: product.productItemPrice,
+      productId: product.productId,
+      productItemId: firstItem.productItemId,
+      name: product.productName,
+      description: product.productDescription,
+      image: product.productItemImage || firstItem.productItemImage,
+      price: firstItem.productItemPrice,
       quantity: 1,
-      maxQuantity: product.productItemQuantityInStock,
-      selectedVariations: product.variations.map(v => ({
+      maxQuantity: firstItem.productItemQuantityInStock,
+      selectedVariations: firstItem.variations.map(v => ({
         variationName: v.variationName,
         selectedOption: v.options
       }))
@@ -292,7 +294,7 @@ export class EcommerceHomeComponent implements OnInit, OnDestroy {
     this.messageService.add({
       severity: 'success',
       summary: 'Agregado al carrito',
-      detail: `${product.productItemSKU} ha sido agregado al carrito`,
+      detail: `${product.productName} ha sido agregado al carrito`,
       life: 3000
     });
   }
@@ -335,11 +337,10 @@ export class EcommerceHomeComponent implements OnInit, OnDestroy {
    * Get product price range display
    */
   getProductPriceRange(product: EcommerceProduct): string {
-    if (!product) return 'N/A';
+    if (!product.productItemQuantityInStock) return 'N/A';
 
-    const prices = [product.productItemPrice];
-    const minPrice = Math.min(...prices);
-    const maxPrice = Math.max(...prices);
+    const minPrice = product.productItemPrice;
+    const maxPrice = product.productItemPrice;
 
     if (minPrice === maxPrice) {
       return `S/${minPrice.toFixed(2)}`;
@@ -352,7 +353,7 @@ export class EcommerceHomeComponent implements OnInit, OnDestroy {
    * Check if product has discount
    */
   hasDiscount(product: EcommerceProduct): boolean {
-    return false;
+    return product.responseCategory!.promotionDTOList?.length > 0;
   }
 
   /**
@@ -361,8 +362,8 @@ export class EcommerceHomeComponent implements OnInit, OnDestroy {
   getDiscountPercentage(product: EcommerceProduct): number {
     if (!this.hasDiscount(product)) return 0;
 
-    const promotion = 0.5;
-    return Math.round(promotion * 100);
+    const promotion = product.responseCategory!.promotionDTOList[0];
+    return Math.round(promotion.promotionDiscountRate * 100);
   }
 
   /**
@@ -389,7 +390,7 @@ export class EcommerceHomeComponent implements OnInit, OnDestroy {
     if (!this.hasDiscount(product)) return this.getProductPrice(product);
 
     const originalPrice = this.getProductPrice(product);
-    const discountRate = 0.5;
+    const discountRate = product.responseCategory!.promotionDTOList[0].promotionDiscountRate;
 
     return originalPrice * (1 - discountRate);
   }

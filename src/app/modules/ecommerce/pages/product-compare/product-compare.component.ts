@@ -118,7 +118,7 @@ export class ProductCompareComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const categoryId = this.baseProduct.responseCategory?.productCategoryId;
+    const categoryId = 1;
 
     if (!categoryId) {
       // Sin categoría, no se puede comparar
@@ -139,12 +139,11 @@ export class ProductCompareComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: EcommerceProductResponse) => {
-          const baseId = this.baseProduct!.productId;
+          const baseId = this.baseProduct!.productItemId;
 
           // Excluimos el producto base de la lista
           const all = response.responseProductList || [];
-          this.similarProducts = all.filter(p => p.productId !== baseId);
-
+          this.similarProducts = all.filter(p => p.productItemId !== baseId);
           this.loading = false;
         },
         error: (err) => {
@@ -170,9 +169,9 @@ export class ProductCompareComponent implements OnInit, OnDestroy {
   private updateBreadcrumb(): void {
     this.setupBaseBreadcrumb();
 
-    if (this.baseProduct?.productName) {
+    if (this.baseProduct?.productItemSKU) {
       this.breadcrumbItems[this.breadcrumbItems.length - 1] = {
-        label: `Comparando: ${this.baseProduct.productName}`
+        label: `Comparando: ${this.baseProduct.productItemSKU}`
       };
     }
   }
@@ -182,7 +181,7 @@ export class ProductCompareComponent implements OnInit, OnDestroy {
   // ---------------------------------------------------------------------------
 
   goToProductDetail(product: EcommerceProduct): void {
-    this.router.navigate(['/ecommerce/products', product.productId]);
+    this.router.navigate(['/ecommerce/products', product.productItemId]);
   }
 
   // ---------------------------------------------------------------------------
@@ -190,57 +189,38 @@ export class ProductCompareComponent implements OnInit, OnDestroy {
   // ---------------------------------------------------------------------------
 
   hasDiscount(product: EcommerceProduct): boolean {
-    return !!(
-      product?.responseCategory?.promotionDTOList &&
-      product.responseCategory.promotionDTOList.length > 0
-    );
+    return true;
   }
 
   getDiscountPercentage(product: EcommerceProduct): number {
-    if (!this.hasDiscount(product) || !product.responseCategory?.promotionDTOList?.[0]) {
-      return 0;
-    }
-    const promotion = product.responseCategory.promotionDTOList[0];
+
+    const promotion = 0.2;
     // Mismo criterio que en ProductListComponent: se asume rate en [0,1]
-    return Math.round((promotion.promotionDiscountRate || 0) * 100);
+    return Math.round((promotion || 0) * 100);
   }
 
   getProductPrice(product: EcommerceProduct): number {
-    if (!product?.responseProductItemDetails?.length) return 0;
 
-    const prices = product.responseProductItemDetails
-      .map(item => item.productItemPrice || 0)
-      .filter(price => price > 0);
-
-    return prices.length > 0 ? Math.min(...prices) : 0;
+    return product.productItemPrice || 0;
   }
 
   getDiscountedPrice(product: EcommerceProduct): number {
     const originalPrice = this.getProductPrice(product);
 
-    if (!this.hasDiscount(product) || !product.responseCategory?.promotionDTOList?.[0]) {
+    if (!this.hasDiscount(product)) {
       return originalPrice;
     }
 
-    const discountRate = product.responseCategory.promotionDTOList[0].promotionDiscountRate || 0;
+    const discountRate = 0.2;
     return originalPrice * (1 - discountRate);
   }
 
   isProductInStock(product: EcommerceProduct): boolean {
-    if (!product?.responseProductItemDetails?.length) return false;
-
-    return product.responseProductItemDetails.some(
-      item => (item.productItemQuantityInStock || 0) > 0
-    );
+    return product.productItemQuantityInStock > 0;
   }
 
   getProductStock(product: EcommerceProduct): number {
-    if (!product?.responseProductItemDetails?.length) return 0;
-
-    return product.responseProductItemDetails.reduce(
-      (total, item) => total + (item.productItemQuantityInStock || 0),
-      0
-    );
+    return product.productItemQuantityInStock || 0;
   }
 
   getVariationSummary(item: any): string {
@@ -253,7 +233,6 @@ export class ProductCompareComponent implements OnInit, OnDestroy {
   }
 
   getCompanyId(product: EcommerceProduct): number | null {
-    const promos = product.responseCategory?.promotionDTOList ?? [];
-    return promos.length > 0 ? promos[0].companyId ?? null : null;
+    return 1;
   }
 }

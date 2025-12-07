@@ -49,6 +49,7 @@ export interface Promotion {
   promotionDiscountRate: number;
   promotionStartDate: string;
   promotionEndDate: string;
+  companyId?: number;
 }
 
 // ============================================================================

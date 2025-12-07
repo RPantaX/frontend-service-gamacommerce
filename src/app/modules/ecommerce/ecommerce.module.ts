@@ -66,6 +66,7 @@ import { SelectButtonModule } from 'primeng/selectbutton';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ProductCompareComponent } from './pages/product-compare/product-compare.component';
 
 @NgModule({
   declarations: [
@@ -92,7 +93,8 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
     // Directives
     LazyLoadDirective,
-    InViewportDirective
+    InViewportDirective,
+    ProductCompareComponent
   ],
   imports: [
     CommonModule,

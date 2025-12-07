@@ -382,7 +382,7 @@
                   </div>
 
                   <!-- Add to Cart -->
-                  <div class="product-cart-action">
+                  <!-- <div class="product-cart-action">
                     <p-button
                       label="Agregar al Carrito"
                       icon="pi pi-shopping-cart"
@@ -390,7 +390,25 @@
                       [disabled]="!isProductInStock(product)"
                       (onClick)="addToCart(product); $event.stopPropagation()">
                     </p-button>
-                  </div>
+                  </div> -->
+                  <div class="product-cart-action">
+  <p-button
+    label="Agregar al Carrito"
+    icon="pi pi-shopping-cart"
+    styleClass="w-full mb-2"
+    [disabled]="!isProductInStock(product)"
+    (onClick)="addToCart(product); $event.stopPropagation()">
+  </p-button>
+
+  <!-- 👇 NUEVO BOTÓN -->
+  <p-button
+    label="Comparar"
+    icon="pi pi-chart-bar"
+    styleClass="w-full p-button-outlined"
+    (onClick)="goToCompare(product); $event.stopPropagation()">
+  </p-button>
+</div>
+
                 </div>
               </div>
             </div>
@@ -509,6 +527,13 @@
                     icon="pi pi-shopping-cart"
                     [disabled]="!isProductInStock(product)"
                     (onClick)="addToCart(product)">
+                  </p-button>
+
+                  <p-button
+                    label="Comparar"
+                    icon="pi pi-chart-bar"
+                    styleClass="mt-2"
+                    (onClick)="goToCompare(product); $event.stopPropagation()">
                   </p-button>
                 </div>
               </div>

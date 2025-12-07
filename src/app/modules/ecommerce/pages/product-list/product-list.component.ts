@@ -360,6 +360,21 @@ export class ProductListComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Navegar a página de comparación de este producto
+   */
+   goToCompare(product: EcommerceProduct): void {
+    this.router.navigate(
+      ['/ecommerce/products/compare', product.productId]
+      // Si quieres pasar también companyId:
+      // {
+      //   queryParams: {
+      //     companyId: this.getCompanyIdFromProduct(product)
+      //   }
+      // }
+    );
+  }
+
+  /**
    * Parse sort option into sortBy and sortDirection
    */
   private parseSortOption(option: SortOption): [SortByType, SortDirectionType] {

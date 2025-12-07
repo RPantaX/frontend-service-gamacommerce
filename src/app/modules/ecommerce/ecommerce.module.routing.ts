@@ -7,6 +7,7 @@ import { ProductListComponent } from './pages/product-list/product-list.componen
 import { ProductDetailComponent } from './pages/product-detail/product-detail.component';
 import { CartComponent } from './pages/cart/cart.component';
 import { CheckoutComponent } from './pages/checkout/checkout.component';
+import { ProductCompareComponent } from './pages/product-compare/product-compare.component';
 
 const routes: Routes = [
   {
@@ -38,6 +39,17 @@ const routes: Routes = [
       description: 'Conoce más sobre nuestros productos de alta calidad'
     }
   },
+
+  {
+    path: 'products/compare/:productId',
+    component: ProductCompareComponent,
+    data: {
+      title: 'Comparar productos - AngieBraids',
+      description: 'Compara este producto con otros similares'
+    }
+  },
+
+
   {
     path: 'hairstyles',
     component: ProductListComponent, // Reuse product list for hairstyles
@@ -79,3 +91,5 @@ const routes: Routes = [
   exports: [RouterModule]
 })
 export class EcommerceRoutingModule { }
+
+

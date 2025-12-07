@@ -1,0 +1,263 @@
+
+
+<div class="product-compare-page">
+
+  <!-- Breadcrumb -->
+  <div class="breadcrumb-section">
+    <div class="container">
+      <p-breadcrumb
+        [model]="breadcrumbItems"
+        [home]="{ icon: 'pi pi-home', routerLink: '/ecommerce/home' }">
+      </p-breadcrumb>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- Página / título -->
+    <div class="page-header">
+      <div class="header-content">
+        <div class="header-text">
+          <h1 class="page-title">
+            Comparación de productos
+          </h1>
+          <p class="page-subtitle" *ngIf="baseProduct">
+            Estás comparando:
+            <strong>{{ baseProduct.productName }}</strong>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="compare-loading">
+      <p-skeleton height="2.5rem" styleClass="mb-3"></p-skeleton>
+      <div class="grid">
+        <div class="col-12 md:col-4">
+          <p-skeleton height="18rem"></p-skeleton>
+        </div>
+        <div class="col-12 md:col-8">
+          <p-skeleton height="2rem" styleClass="mb-2"></p-skeleton>
+          <p-skeleton height="2rem" styleClass="mb-2"></p-skeleton>
+          <p-skeleton height="12rem"></p-skeleton>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contenido cargado -->
+    <ng-container *ngIf="!loading">
+
+      <!-- Error -->
+      <div *ngIf="errorMessage" class="alert-error mb-4">
+  <i class="pi pi-exclamation-triangle mr-2"></i>
+  {{ errorMessage }}
+</div>
+
+      <!-- Si no hay producto base -->
+      <div *ngIf="!baseProduct && !errorMessage" class="no-product">
+        <i class="pi pi-info-circle no-product-icon"></i>
+        <h3>No se encontró el producto a comparar</h3>
+        <p>
+          Vuelve al listado de productos e intenta nuevamente.
+        </p>
+        <p-button
+          label="Volver a productos"
+          icon="pi pi-arrow-left"
+          routerLink="/ecommerce/products">
+        </p-button>
+      </div>
+
+      <!-- Layout principal de comparación -->
+      <div *ngIf="baseProduct" class="compare-layout">
+
+        <!-- COLUMNA IZQUIERDA: producto base -->
+        <section class="base-product">
+          <p-card styleClass="base-product-card">
+
+            <ng-template pTemplate="header">
+              <div class="base-product-header">
+                <img
+                  [src]="baseProduct.productImage || 'assets/images/product-placeholder.jpg'"
+                  [alt]="baseProduct.productName"
+                  class="base-product-image" />
+
+                <div class="base-product-header-text">
+                  <div class="product-category">
+                    {{ baseProduct.responseCategory.productCategoryName || 'Sin categoría' }}
+                  </div>
+                  <h2 class="product-name">
+                    {{ baseProduct.productName }}
+                  </h2>
+
+                  <div class="company-line">
+                    <i class="pi pi-building mr-2"></i>
+                    <span>
+                      Empresa ID:
+                      <strong>{{ getCompanyId(baseProduct) || 'N/A' }}</strong>
+                    </span>
+                  </div>
+
+                  <div class="rating-line" *ngIf="baseProduct.rating && baseProduct.rating > 0">
+                    <p-rating
+                      [(ngModel)]="baseProduct.rating"
+                      [readonly]="true"
+                      [cancel]="false"
+                      styleClass="product-rating-stars">
+                    </p-rating>
+                    <span class="rating-count">
+                      ({{ baseProduct.reviewCount || 0 }} reseñas)
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+
+            <div class="base-product-body">
+              <p class="product-description">
+                {{ baseProduct.productDescription }}
+              </p>
+
+              <div class="price-block">
+                <div class="price-line">
+                  <span class="label">Precio desde:</span>
+                  <span class="value">
+                    S/{{ getProductPrice(baseProduct).toFixed(2) }}
+                  </span>
+                </div>
+
+                <div *ngIf="hasDiscount(baseProduct)" class="price-line">
+                  <span class="label">Precio con descuento:</span>
+                  <span class="value highlight">
+                    S/{{ getDiscountedPrice(baseProduct).toFixed(2) }}
+                  </span>
+                  <p-tag
+                    severity="success"
+                    [value]="('-' + (getDiscountPercentage(baseProduct)) + '%')">
+                  </p-tag>
+                </div>
+
+                <div class="price-line" *ngIf="isProductInStock(baseProduct)">
+                  <span class="label">Stock total:</span>
+                  <span class="value">
+                    {{ getProductStock(baseProduct) }} unidades
+                  </span>
+                </div>
+
+                <div class="price-line" *ngIf="!isProductInStock(baseProduct)">
+                  <span class="label">Stock:</span>
+                  <span class="value text-red-500">Sin stock</span>
+                </div>
+              </div>
+
+              <!-- Variantes principales -->
+              <div
+                class="variants-section"
+                *ngIf="baseProduct.responseProductItemDetails.length">
+                <h3>Variantes del producto</h3>
+                <div class="variant-chips">
+                  <span
+                    class="variant-chip"
+                    *ngFor="let item of baseProduct.responseProductItemDetails | slice:0:3">
+                    {{ getVariationSummary(item) }}
+                  </span>
+                  <span
+                    class="variant-chip more"
+                    *ngIf="baseProduct.responseProductItemDetails.length > 3">
+                    +{{ baseProduct.responseProductItemDetails.length - 3 }} más
+                  </span>
+                </div>
+              </div>
+            </div>
+
+          </p-card>
+        </section>
+
+        <!-- COLUMNA DERECHA: tabla de productos similares -->
+        <section class="similar-products">
+          <h2 class="section-title">
+            Productos similares
+          </h2>
+          <p class="section-subtitle">
+            Productos de la misma categoría
+            <span *ngIf="baseProduct.responseCategory">
+              ({{ baseProduct.responseCategory.productCategoryName }})
+            </span>
+            y con características o precios comparables.
+          </p>
+
+          <!-- Si hay productos similares -->
+          <div *ngIf="similarProducts && similarProducts.length > 0; else noSimilar">
+            <div *ngIf="similarProducts && similarProducts.length > 0; else noSimilar">
+  <table class="comparison-table">
+    <thead>
+      <tr>
+        <th>Producto</th>
+        <th>Empresa</th>
+        <th>Precio</th>
+        <th>Descuento</th>
+        <th>Stock</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let p of similarProducts">
+        <td>
+          <div class="product-name-cell">
+            <strong>{{ p.productName }}</strong>
+            <div class="muted">
+              {{ p.responseCategory.productCategoryName }}
+            </div>
+          </div>
+        </td>
+        <td>
+          {{ getCompanyId(p) ?? 'N/A' }}
+        </td>
+        <td>
+          S/{{ getProductPrice(p).toFixed(2) }}
+        </td>
+        <td>
+          <span *ngIf="hasDiscount(p); else noDisc">
+            -{{ getDiscountPercentage(p) }}%
+          </span>
+          <ng-template #noDisc>Sin descuento</ng-template>
+        </td>
+        <td>
+          {{ getProductStock(p) }} unid.
+        </td>
+        <td>
+          <p-button
+            label="Ver"
+            icon="pi pi-eye"
+            size="small"
+            (onClick)="goToProductDetail(p)">
+          </p-button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+          </div>
+
+          <!-- Si NO hay productos similares -->
+          <ng-template #noSimilar>
+            <div class="no-similar">
+              <i class="pi pi-search-minus no-similar-icon"></i>
+              <h3>No se encontraron productos similares</h3>
+              <p>
+                No hay otros productos en la misma categoría que cumplan los criterios de comparación.
+              </p>
+              <p-button
+                label="Volver a productos"
+                icon="pi pi-arrow-left"
+                routerLink="/ecommerce/products">
+              </p-button>
+            </div>
+          </ng-template>
+        </section>
+
+      </div>
+    </ng-container>
+
+  </div>
+</div>

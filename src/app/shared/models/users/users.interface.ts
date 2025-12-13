@@ -36,6 +36,7 @@ export interface UserRequest {
   enabled: boolean;
   email: string;
   admin: boolean;
+  companyId: number;
 }
 
 export interface CreateUserRequest {
@@ -47,6 +48,7 @@ export interface CreateUserRequest {
   admin: boolean;
   document?: string; // For linking to employee
   keycloakId?: string;
+  companyId: number;
 }
 
 export interface UpdateUserRequest {

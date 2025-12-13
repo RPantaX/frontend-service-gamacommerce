@@ -9,8 +9,12 @@ export interface User {
   email: string;
   roles: UserRoles[];
   enabled: boolean;
+  company: Company;
 }
-
+export interface Company {
+  id : number;
+  companyEmail: string;
+}
 export interface TokenResponse {
   token: string;
 }

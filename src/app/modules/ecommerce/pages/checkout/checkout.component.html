@@ -275,151 +275,76 @@
           </div>
         </div>
 
-        <!-- Step 2: Payment Information -->
-        <div class="checkout-step" *ngIf="currentStep() === 2">
-          <h2 class="step-title">Método de Pago</h2>
-          <p class="step-description">Elige cómo quieres pagar tu pedido</p>
+    <!-- Step 2: Payment Information -->
+    <div class="checkout-step" *ngIf="currentStep() === 2">
+      <h2 class="step-title">Método de Pago</h2>
+      <p class="step-description">Elige cómo quieres pagar tu pedido</p>
 
-          <!-- Payment Methods -->
-          <div class="payment-methods">
-            <div
-              class="payment-option"
-              *ngFor="let method of paymentMethods"
-              [class.selected]="selectedPaymentMethod()?.id === method.id"
-              (click)="onPaymentMethodSelect(method)">
+      <!-- Payment Methods -->
+      <div class="payment-methods">
+        <div
+          class="payment-option"
+          *ngFor="let method of paymentMethods"
+          [class.selected]="selectedPaymentMethod()?.id === method.id"
+          (click)="onPaymentMethodSelect(method)">
 
-              <div class="option-content">
-                <div class="option-header">
-                  <i [class]="method.icon"></i>
-                  <h4 class="option-title">{{ method.name }}</h4>
-                </div>
-                <p class="option-description">{{ method.description }}</p>
-              </div>
-
-              <div class="option-indicator">
-                <i class="pi pi-check" *ngIf="selectedPaymentMethod()?.id === method.id"></i>
-              </div>
+          <div class="option-content">
+            <div class="option-header">
+              <i [class]="method.icon"></i>
+              <h4 class="option-title">{{ method.name }}</h4>
             </div>
+            <p class="option-description">{{ method.description }}</p>
           </div>
 
-          <!-- Credit Card Form -->
-          <form [formGroup]="paymentForm" class="payment-form" *ngIf="selectedPaymentMethod()?.id === 'visa'">
-            <h3>Información de la tarjeta</h3>
+          <div class="option-indicator">
+            <i class="pi pi-check" *ngIf="selectedPaymentMethod()?.id === method.id"></i>
+          </div>
+        </div>
+      </div>
 
-            <div class="form-grid">
-              <div class="form-group full-width">
-                <label for="cardNumber">Número de tarjeta *</label>
-                <input
-                  id="cardNumber"
-                  type="text"
-                  pInputText
-                  formControlName="cardNumber"
-                  [class.p-invalid]="hasFieldError(paymentForm, 'cardNumber')"
-                  placeholder="1234 5678 9012 3456"
-                  maxlength="19" />
-                <small
-                  class="p-error"
-                  *ngIf="hasFieldError(paymentForm, 'cardNumber')">
-                  {{ getFieldError(paymentForm, 'cardNumber') }}
-                </small>
-              </div>
+      <!-- Stripe Payment Component -->
+      <div class="stripe-payment-section" *ngIf="shouldShowStripePayment()">
+        <app-stripe-payment
+          [amount]="getTotalAmount()"
+          [orderId]="orderId()"
+          (paymentSuccess)="onStripePaymentSuccess($event)"
+          (paymentError)="onStripePaymentError($event)">
+        </app-stripe-payment>
+      </div>
 
-              <div class="form-group full-width">
-                <label for="cardName">Nombre en la tarjeta *</label>
-                <input
-                  id="cardName"
-                  type="text"
-                  pInputText
-                  formControlName="cardName"
-                  [class.p-invalid]="hasFieldError(paymentForm, 'cardName')"
-                  placeholder="Nombre como aparece en la tarjeta" />
-                <small
-                  class="p-error"
-                  *ngIf="hasFieldError(paymentForm, 'cardName')">
-                  {{ getFieldError(paymentForm, 'cardName') }}
-                </small>
-              </div>
+      <!-- Other Payment Methods Info (Yape, Plin, etc) -->
+      <div class="payment-info" *ngIf="!shouldShowStripePayment() && selectedPaymentMethod()">
+        <div class="payment-instructions">
+          <h3>Instrucciones de pago</h3>
+          <div class="instructions-content" [ngSwitch]="selectedPaymentMethod()?.id">
 
-              <div class="form-group">
-                <label for="expiryDate">Fecha de vencimiento *</label>
-                <input
-                  id="expiryDate"
-                  type="text"
-                  pInputText
-                  formControlName="expiryDate"
-                  [class.p-invalid]="hasFieldError(paymentForm, 'expiryDate')"
-                  placeholder="MM/AA"
-                  maxlength="5" />
-                <small
-                  class="p-error"
-                  *ngIf="hasFieldError(paymentForm, 'expiryDate')">
-                  {{ getFieldError(paymentForm, 'expiryDate') }}
-                </small>
-              </div>
-
-              <div class="form-group">
-                <label for="cvv">CVV *</label>
-                <input
-                  id="cvv"
-                  type="text"
-                  pInputText
-                  formControlName="cvv"
-                  [class.p-invalid]="hasFieldError(paymentForm, 'cvv')"
-                  placeholder="123"
-                  maxlength="4" />
-                <small
-                  class="p-error"
-                  *ngIf="hasFieldError(paymentForm, 'cvv')">
-                  {{ getFieldError(paymentForm, 'cvv') }}
-                </small>
-              </div>
-
-              <div class="form-group full-width">
-                <p-checkbox
-                  formControlName="saveCard"
-                  binary="true"
-                  inputId="saveCard">
-                </p-checkbox>
-                <label for="saveCard" class="checkbox-label">
-                  Guardar tarjeta para futuras compras
-                </label>
-              </div>
+            <div *ngSwitchCase="'yape'">
+              <p>Te enviaremos un código QR para realizar el pago con Yape una vez confirmado el pedido.</p>
+              <ul>
+                <li>Tendrás 15 minutos para completar el pago</li>
+                <li>El pedido se procesará automáticamente al confirmar el pago</li>
+              </ul>
             </div>
-          </form>
 
-          <!-- Other Payment Methods Info -->
-          <div class="payment-info" *ngIf="selectedPaymentMethod()?.id !== 'visa' && selectedPaymentMethod()">
-            <div class="payment-instructions">
-              <h3>Instrucciones de pago</h3>
-              <div class="instructions-content" [ngSwitch]="selectedPaymentMethod()?.id">
+            <div *ngSwitchCase="'plin'">
+              <p>Te enviaremos un enlace para realizar el pago con Plin una vez confirmado el pedido.</p>
+              <ul>
+                <li>Tendrás 15 minutos para completar el pago</li>
+                <li>Compatible con todos los bancos afiliados a Plin</li>
+              </ul>
+            </div>
 
-                <div *ngSwitchCase="'yape'">
-                  <p>Te enviaremos un código QR para realizar el pago con Yape una vez confirmado el pedido.</p>
-                  <ul>
-                    <li>Tendrás 15 minutos para completar el pago</li>
-                    <li>El pedido se procesará automáticamente al confirmar el pago</li>
-                  </ul>
-                </div>
-
-                <div *ngSwitchCase="'plin'">
-                  <p>Te enviaremos un enlace para realizar el pago con Plin una vez confirmado el pedido.</p>
-                  <ul>
-                    <li>Tendrás 15 minutos para completar el pago</li>
-                    <li>Compatible con todos los bancos afiliados a Plin</li>
-                  </ul>
-                </div>
-
-                <div *ngSwitchCase="'bank_transfer'">
-                  <p>Te enviaremos los datos bancarios para realizar la transferencia.</p>
-                  <ul>
-                    <li>Tienes hasta 24 horas para realizar la transferencia</li>
-                    <li>Envía el voucher por WhatsApp al +51 999 123 456</li>
-                  </ul>
-                </div>
-              </div>
+            <div *ngSwitchCase="'bank_transfer'">
+              <p>Te enviaremos los datos bancarios para realizar la transferencia.</p>
+              <ul>
+                <li>Tienes hasta 24 horas para realizar la transferencia</li>
+                <li>Envía el voucher por WhatsApp al +51 999 123 456</li>
+              </ul>
             </div>
           </div>
         </div>
+      </div>
+    </div>
 
         <!-- Step 3: Order Confirmation -->
         <div class="checkout-step" *ngIf="currentStep() === 3">

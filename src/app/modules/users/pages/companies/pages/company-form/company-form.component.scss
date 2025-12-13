@@ -1,0 +1,39 @@
+.company-form-container {
+  padding: 1rem;
+  background: var(--surface-ground);
+  min-height: 100vh;
+
+  .section-title {
+    margin: 0;
+    font-weight: 700;
+    color: var(--text-color);
+  }
+
+  .field-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: .35rem;
+    color: var(--text-color-secondary);
+    text-transform: uppercase;
+    font-size: .8rem;
+    letter-spacing: .4px;
+  }
+
+  ::ng-deep .p-panel {
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    border: 1px solid var(--surface-200);
+    overflow: hidden;
+
+    .p-panel-header {
+      background: var(--surface-50);
+      border-bottom: 1px solid var(--surface-200);
+      padding: 1rem 1.5rem;
+      font-weight: 600;
+    }
+
+    .p-panel-content {
+      padding: 1.5rem;
+    }
+  }
+}

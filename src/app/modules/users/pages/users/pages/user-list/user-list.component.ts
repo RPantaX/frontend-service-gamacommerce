@@ -1,7 +1,7 @@
 // pages/user-list/user-list.component.ts
 import { Component, OnInit, OnDestroy, signal, computed, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
+import { filter, Subject, take, takeUntil } from 'rxjs';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { Table } from 'primeng/table';
 
@@ -16,6 +16,10 @@ import {
   UserStatusMapping,
 } from '../../../../../../shared/models/users/users.interface';
 import { UserService } from '../../../../../../core/services/users/users.service';
+import { Store } from '@ngrx/store';
+import { SecurityState } from '../../../../../../../@security/interfaces/SecurityState';
+import { User } from '../../../../../../shared/models/auth/auth.interface';
+import { currentUser } from '../../../../../../../@security/redux/selectors/auth.selector';
 
 @Component({
   selector: 'app-user-list',
@@ -26,13 +30,12 @@ export class UserListComponent implements OnInit, OnDestroy {
   @ViewChild('dt') table!: Table;
 
   private destroy$ = new Subject<void>();
-
   // Signals para manejo de estado
   users = signal<UserDto[]>([]);
   filteredUsers = signal<UserDto[]>([]);
   roles = signal<RoleDto[]>([]);
   loading = signal<boolean>(false);
-
+  userSession: User | null = null;
   // Filtros
   filters = signal<UserFilter>({
     enabled: true,
@@ -76,12 +79,29 @@ export class UserListComponent implements OnInit, OnDestroy {
     private userService: UserService,
     private router: Router,
     private confirmationService: ConfirmationService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private readonly store: Store<SecurityState>
   ) {}
 
   ngOnInit(): void {
-    this.loadInitialData();
+    // this.loadInitialData(); // ⬅️ ¡QUITAR ESTA LÍNEA!
     this.setupRefreshSubscription();
+
+    // 1. Suscribirse al usuario de la sesión
+    this.store.select(currentUser)
+      .pipe(
+        // Añadir filter para que solo se ejecute si hay usuario
+        filter(user => user !== null),
+        // Tomar solo el primer valor que no sea null y luego desuscribirse
+        take(1),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(user => {
+        this.userSession = user;
+        console.log('User session loaded:', this.userSession); // ✅ Ahora sí se verá el usuario
+        // 2. LLAMAR A LA CARGA DE DATOS SÓLO CUANDO LA SESIÓN ESTÉ DISPONIBLE
+        this.loadInitialData();
+      });
   }
 
   ngOnDestroy(): void {
@@ -93,9 +113,8 @@ export class UserListComponent implements OnInit, OnDestroy {
 
   private loadInitialData(): void {
     this.loading.set(true);
-
     // Cargar usuarios y roles
-    this.userService.getAllUsers()
+    this.userService.getAllUsersByCompanyId(this.userSession?.company.id || 0)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (users) => {

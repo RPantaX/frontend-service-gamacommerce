@@ -67,6 +67,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ProductCompareComponent } from './pages/product-compare/product-compare.component';
+import { StripePaymentComponent } from './pages/checkout/stripe-payment/stripe-payment.component';
 
 @NgModule({
   declarations: [
@@ -76,7 +77,7 @@ import { ProductCompareComponent } from './pages/product-compare/product-compare
     ProductDetailComponent,
     CartComponent,
     CheckoutComponent,
-
+    StripePaymentComponent,
     // Components
     ProductCardComponent,
     ProductFiltersComponent,

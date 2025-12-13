@@ -34,6 +34,7 @@ export interface RequestShopOrder {
   userId: number;
   requestAdress: RequestAddress;
   shoppingMethodId: number;
+  stripePaymentIntentId?: string;
 }
 
 // Response interfaces

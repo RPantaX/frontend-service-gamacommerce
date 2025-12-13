@@ -1,0 +1,261 @@
+<div class="company-form-container">
+  <p-toast></p-toast>
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <p-panel [header]="title()">
+    <div class="grid">
+      <!-- PERSON -->
+      <div class="col-12">
+        <h3 class="section-title">Datos del Representante</h3>
+        <p-divider></p-divider>
+      </div>
+
+      <div class="col-12 md:col-4">
+        <label class="field-label">Tipo Documento</label>
+        <p-dropdown
+          [options]="documentTypes()"
+          optionLabel="value"
+          optionValue="id"
+          placeholder="Seleccionar"
+          [ngModel]="form.value.personDocumentId"
+          (onChange)="form.patchValue({ personDocumentId: $event.value })"
+          styleClass="w-full">
+        </p-dropdown>
+        <small class="p-error" *ngIf="hasError('personDocumentId','required')">Requerido</small>
+      </div>
+
+      <div class="col-12 md:col-4">
+        <label class="field-label">N° Documento</label>
+        <input pInputText class="w-full" formControlName="personDocumentNumber", id="personDocumentNumber" />
+        <small class="p-error" *ngIf="hasError('personDocumentNumber','required')">Requerido</small>
+      </div>
+
+      <div class="col-12 md:col-4">
+        <label class="field-label">Teléfono</label>
+        <input pInputText class="w-full" formControlName="personPhoneNumber" />
+        <small class="p-error" *ngIf="hasError('personPhoneNumber','required')">Requerido</small>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label class="field-label">Nombre</label>
+        <input pInputText class="w-full" formControlName="personName" />
+        <small class="p-error" *ngIf="hasError('personName','required')">Requerido</small>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label class="field-label">Apellido</label>
+        <input pInputText class="w-full" formControlName="personLastName" />
+        <small class="p-error" *ngIf="hasError('personLastName','required')">Requerido</small>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label class="field-label">Email</label>
+        <input pInputText class="w-full" formControlName="personEmailAddress" />
+        <small class="p-error" *ngIf="hasError('personEmailAddress','required')">Requerido</small>
+        <small class="p-error" *ngIf="hasError('personEmailAddress','email')">Email inválido</small>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label class="field-label">Dirección</label>
+        <input pInputText class="w-full" formControlName="personAddressStreet" />
+        <small class="p-error" *ngIf="hasError('personAddressStreet','required')">Requerido</small>
+      </div>
+
+      <div class="col-12 md:col-3">
+        <label class="field-label">Ciudad</label>
+        <input pInputText class="w-full" formControlName="personAddressCity" />
+        <small class="p-error" *ngIf="hasError('personAddressCity','required')">Requerido</small>
+      </div>
+
+      <div class="col-12 md:col-3">
+        <label class="field-label">Estado</label>
+        <input pInputText class="w-full" formControlName="personAddressState" />
+        <small class="p-error" *ngIf="hasError('personAddressState','required')">Requerido</small>
+      </div>
+
+      <div class="col-12 md:col-3">
+        <label class="field-label">Postal</label>
+        <input pInputText class="w-full" formControlName="personAddressPostalCode" />
+        <small class="p-error" *ngIf="hasError('personAddressPostalCode','required')">Requerido</small>
+      </div>
+
+      <div class="col-12 md:col-3">
+        <label class="field-label">País</label>
+        <input pInputText class="w-full" formControlName="personAddressCountry" />
+        <small class="p-error" *ngIf="hasError('personAddressCountry','required')">Requerido</small>
+      </div>
+
+      <!-- COMPANY -->
+      <div class="col-12 mt-3">
+        <h3 class="section-title">Datos de la Empresa</h3>
+        <p-divider></p-divider>
+      </div>
+
+      <div class="col-12 md:col-4">
+        <label class="field-label">Tipo de Empresa</label>
+        <p-dropdown
+          [options]="companyTypes()"
+          optionLabel="value"
+          optionValue="id"
+          placeholder="Seleccionar"
+          [ngModel]="form.value.companyTypeId"
+          (onChange)="form.patchValue({ companyTypeId: $event.value })"
+          styleClass="w-full">
+        </p-dropdown>
+        <small class="p-error" *ngIf="hasError('companyTypeId','required')">Requerido</small>
+      </div>
+
+      <div class="col-12 md:col-4">
+        <label class="field-label">Documento Empresa</label>
+        <p-dropdown
+          [options]="documentTypes()"
+          optionLabel="value"
+          optionValue="id"
+          placeholder="Seleccionar"
+          [ngModel]="form.value.companyDocumentId"
+          (onChange)="form.patchValue({ companyDocumentId: $event.value })"
+          styleClass="w-full">
+        </p-dropdown>
+        <small class="p-error" *ngIf="hasError('companyDocumentId','required')">Requerido</small>
+      </div>
+
+      <div class="col-12 md:col-4">
+        <label class="field-label">RUC (11 dígitos)</label>
+        <input pInputText class="w-full" formControlName="companyRUC" />
+        <small class="p-error" *ngIf="hasError('companyRUC','required')">Requerido</small>
+        <small class="p-error" *ngIf="hasError('companyRUC','pattern')">Debe tener 11 dígitos</small>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label class="field-label">Nombre Comercial</label>
+        <input pInputText class="w-full" formControlName="companyTradeName" />
+        <small class="p-error" *ngIf="hasError('companyTradeName','required')">Requerido</small>
+      </div>
+
+      <div class="col-12 md:col-3">
+        <label class="field-label">Teléfono Empresa</label>
+        <input pInputText class="w-full" formControlName="companyPhone" />
+        <small class="p-error" *ngIf="hasError('companyPhone','required')">Requerido</small>
+      </div>
+
+      <div class="col-12 md:col-3">
+        <label class="field-label">Email Empresa</label>
+        <input pInputText class="w-full" formControlName="companyEmail" />
+        <small class="p-error" *ngIf="hasError('companyEmail','required')">Requerido</small>
+        <small class="p-error" *ngIf="hasError('companyEmail','email')">Email inválido</small>
+      </div>
+
+          <div class="form-field image-field">
+
+      <label for="productItemImage">Imagen / Logo del comercio</label>
+
+      <div class="flex flex-column gap-3">
+        <input
+          type="file"
+          #fileInput
+          accept="image/jpeg,image/png,image/gif,image/webp"
+          (change)="onFileSelected($event)"
+          class="hidden"
+          id="fileInput"
+        />
+
+        <div class="flex gap-2 align-items-center">
+          <p-button
+            type="button"
+            label="Seleccionar Imagen"
+            icon="pi pi-upload"
+            (click)="fileInput.click()"
+            [disabled]="isSubmitting()"
+            severity="secondary"
+            [outlined]="true"
+            size="small"
+          ></p-button>
+
+          <p-button
+            type="button"
+            label="Remover"
+            icon="pi pi-times"
+            (click)="removeImage()"
+            [disabled]="!imagePreview() || isSubmitting()"
+            severity="danger"
+            [outlined]="true"
+            size="small"
+          ></p-button>
+
+          <!-- Indicador de cambios -->
+          <span *ngIf="hasImageChanged()" class="text-sm text-orange-500">
+            <i class="pi pi-exclamation-triangle"></i>
+            {{ shouldDeleteImage() ? 'La imagen será eliminada' : 'Nueva imagen seleccionada' }}
+          </span>
+        </div>
+
+        <!-- Preview de la imagen -->
+        <div *ngIf="imagePreview()" class="image-preview-container">
+          <div class="relative inline-block">
+            <img
+              [src]="imagePreview()"
+              alt="Vista previa de la imagen del item"
+              class="item-image-preview"
+            />
+
+            <!-- Overlay cuando la imagen será eliminada -->
+            <div
+              *ngIf="shouldDeleteImage()"
+              class="image-overlay"
+            >
+              <span class="overlay-text">
+                <i class="pi pi-times-circle"></i>
+                Será eliminada
+              </span>
+            </div>
+          </div>
+
+          <small class="image-info">
+            Formatos soportados: JPG, PNG, GIF, WebP (máximo 5MB)
+          </small>
+        </div>
+
+        <!-- Mensaje cuando no hay imagen -->
+        <div *ngIf="!imagePreview()" class="no-image-placeholder">
+          <i class="pi pi-image text-4xl text-300"></i>
+          <p class="text-500 mt-2">No hay imagen seleccionada</p>
+          <small class="text-sm text-400">Haga clic en "Seleccionar Imagen" para agregar una</small>
+        </div>
+      </div>
+    </div>
+
+      <!-- CONTRACT -->
+      <div class="col-12 mt-3">
+        <h3 class="section-title">Contrato</h3>
+        <p-divider></p-divider>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label class="field-label">Duración (meses)</label>
+        <input pInputText class="w-full" type="number" formControlName="contractTimeMonth" />
+        <small class="p-error" *ngIf="hasError('contractTimeMonth','required')">Requerido</small>
+      </div>
+
+      <div class="col-12 md:col-4">
+        <label class="field-label">Tipo Contrato (ID)</label>
+        <p-dropdown
+          [options]="contractKinds()"
+          optionLabel="value"
+          optionValue="id"
+          placeholder="Seleccionar"
+          [ngModel]="form.value.contractKindId"
+          (onChange)="form.patchValue({ contractKindId: $event.value })"
+          styleClass="w-full">
+        </p-dropdown>
+        <small class="p-error" *ngIf="hasError('contractKindId','required')">Requerido</small>
+      </div>
+      <!-- ACTIONS -->
+      <div class="col-12 mt-4">
+        <div class="flex justify-content-end gap-2">
+          <p-button label="Cancelar" icon="pi pi-times" styleClass="p-button-outlined" (onClick)="cancel()"></p-button>
+          <p-button label="Guardar" icon="pi pi-save" (onClick)="submit()" [loading]="loading()"></p-button>
+        </div>
+      </div>
+    </div>
+  </p-panel>
+</form>
+</div>

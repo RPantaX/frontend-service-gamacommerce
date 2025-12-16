@@ -5,6 +5,10 @@ import { CategoryService } from '../../../../core/services/products/category.ser
 import { PromotionService } from '../../../../core/services/products/promotion.service';
 import { ResponseCategory, CategoryRegister } from '../../../../shared/models/categories/category.interface';
 import { PromotionDTO } from '../../../../shared/models/promotions/promotion.interface';
+import { Store } from '@ngrx/store';
+import { SecurityState } from '../../../../../@security/interfaces/SecurityState';
+import { Observable, switchMap, take } from 'rxjs';
+import { User } from '../../../../shared/models/auth/auth.interface';
 
 @Component({
   selector: 'app-category-page',
@@ -19,6 +23,10 @@ export class CategoryComponent implements OnInit {
   selectedCategory: ResponseCategory | null = null;
   isLoading: boolean = false;
 
+  private store: Store<SecurityState> = inject(Store);
+  currentUserSession$: Observable<User | null>;
+  currentUserSession: User | null = null;
+
   categoryService = inject(CategoryService);
   promotionService = inject(PromotionService);
   messageService = inject(MessageService);
@@ -27,7 +35,9 @@ export class CategoryComponent implements OnInit {
   //constant companyId
   companyId: number = 1; // The companyId will be set in the backend according to the logged in user
   constructor(
-  ) {}
+  ) {
+    this.currentUserSession$ = this.store.select(state => state.userState.user);
+  }
 
   ngOnInit(): void {
     // Load promotions for the dropdown in the category form
@@ -39,7 +49,17 @@ export class CategoryComponent implements OnInit {
    */
   loadPromotions(): void {
     this.isLoading = true;
-    this.promotionService.getAllPromotionsByCompanyId(this.companyId).subscribe({
+    this.currentUserSession$.pipe(
+      take(1),
+      switchMap(user => {
+        if (user) {
+          this.companyId = user.company.id;
+          return this.promotionService.getAllPromotionsByCompanyId(this.companyId);
+        } else {
+          throw new Error('User not logged in');
+        }
+      })
+    ).subscribe({
       next: (data) => {
         this.promotions = data;
         this.isLoading = false;

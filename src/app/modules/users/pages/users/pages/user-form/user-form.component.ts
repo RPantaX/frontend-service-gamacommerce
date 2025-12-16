@@ -25,7 +25,7 @@ import { SecurityState } from '../../../../../../../@security/interfaces/Securit
 @Component({
   selector: 'app-user-form',
   templateUrl: './user-form.component.html',
-  styleUrls: ['./user-form.component.scss']
+  styleUrls: ['./user-form.component.scss', './user-form.component2.scss']
 })
 export class UserFormComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();

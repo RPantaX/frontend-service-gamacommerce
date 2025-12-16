@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, signal, computed, inject, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import { Subject, takeUntil, debounceTime, distinctUntilChanged, finalize } from 'rxjs';
+import { Subject, takeUntil, debounceTime, distinctUntilChanged, finalize, Observable, take, switchMap } from 'rxjs';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { Table } from 'primeng/table';
@@ -11,6 +11,9 @@ import {
   ShopOrderStatusEnum,
   ResponseListPageableShopOrder
 } from '../../../../shared/models/orders/order.interface';
+import { Store } from '@ngrx/store';
+import { SecurityState } from '../../../../../@security/interfaces/SecurityState';
+import { User } from '../../../../shared/models/auth/auth.interface';
 
 interface FilterOptions {
   status: string;
@@ -33,14 +36,18 @@ export class OrderListComponent implements OnInit, OnDestroy {
   @ViewChild('ordersTable') ordersTable!: Table;
 
   private destroy$ = new Subject<void>();
-
+  private store: Store<SecurityState> = inject(Store);
+    currentUserSession$: Observable<User | null>;
+    currentUserSession: User | null = null;
   // Injected services
   private orderService = inject(OrderService);
   private messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
   private router = inject(Router);
   private fb = inject(FormBuilder);
-
+ constructor() {
+    this.currentUserSession$ = this.store.select(state => state.userState.user);
+  }
   // Signals for reactive state
   orders = signal<ResponseShopOrder[]>([]);
   loading = signal(false);
@@ -146,8 +153,18 @@ export class OrderListComponent implements OnInit, OnDestroy {
       this.currentPage.set(page);
       this.pageSize.set(size);
     }
-
-    this.orderService.getPageableOrdersByCompanyId(page, size, sortField, sortDir, this.companyId)
+    this.currentUserSession$
+      .pipe(
+        take(1),
+        switchMap(user => {
+          if (user) {
+            this.companyId = user.company.id;
+            return this.orderService.getPageableOrdersByCompanyId(page, size, sortField, sortDir, this.companyId);
+          } else {
+            throw new Error('User not logged in');
+          }
+        })
+      )
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => this.loading.set(false))

@@ -140,3 +140,8 @@ export interface CreateCompanyRequest {
      deleteFile?: boolean;
   };
 }
+
+export interface CreateCompanyResponse {
+  companyDto : CompanyDtoLite;
+  userDto : ResponseUserDto;
+}

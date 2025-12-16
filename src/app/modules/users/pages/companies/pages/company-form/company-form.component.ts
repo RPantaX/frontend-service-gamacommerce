@@ -2,9 +2,14 @@ import { Component, ElementRef, OnInit, ViewChild, computed, inject, signal } fr
 import { FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { CatalogItem, CreateCompanyRequest, CompanyDetailDto, ContractKindDto } from '../../../../../../shared/models/users/company.interface';
+import {
+  CatalogItem,
+  CreateCompanyRequest,
+  CreateCompanyResponse,
+  CompanyDetailDto,
+  ContractKindDto
+} from '../../../../../../shared/models/users/company.interface';
 import { CompanyService } from '../../../../../../core/services/users/company.service';
-import { Console } from 'console';
 
 @Component({
   selector: 'app-company-form',
@@ -21,6 +26,10 @@ export class CompanyFormComponent implements OnInit {
   private messageService = inject(MessageService);
 
   isEditMode = false;
+
+  // Signal para mostrar el diálogo con la respuesta
+  showSuccessDialog = signal<boolean>(false);
+  createdCompanyResponse = signal<CreateCompanyResponse | null>(null);
 
   // Signals para manejo de imágenes
   private readonly _isSubmitting = signal<boolean>(false);
@@ -93,8 +102,6 @@ export class CompanyFormComponent implements OnInit {
         this.documentTypes.set(documentTypes);
         this.companyTypes.set(companyTypes);
 
-        // Cargar tipos de contrato manualmente si no existe el endpoint
-        // Por ahora uso datos mock basados en el JSON de respuesta
         this.contractKinds.set([
           { id: 1, value: 'PRUEBA_PRIMERA_VEZ' },
           { id: 2, value: 'CONTRATO_ANUAL' },
@@ -142,9 +149,7 @@ export class CompanyFormComponent implements OnInit {
       }
     };
 
-    // Manejar imagen
     if (this.selectedFile()) {
-      // Convertir la imagen a Base64
       this.convertFileToBase64(this.selectedFile()!).then(base64 => {
         payload.company.image = this.selectedFile()!;
         this.executeSubmit(payload);
@@ -153,24 +158,23 @@ export class CompanyFormComponent implements OnInit {
         this._isSubmitting.set(false);
       });
     } else if (this.shouldDeleteImage() && this.isEditMode) {
-      // Marcar para eliminar imagen (esto depende de cómo tu backend maneje la eliminación)
       payload.company.deleteFile = true;
       this.executeSubmit(payload);
-
     } else {
       payload.company.deleteFile = true;
       this.executeSubmit(payload);
-
     }
   }
 
   private executeSubmit(payload: CreateCompanyRequest): void {
     if (this.mode() === 'create') {
       this.companyService.createCompany(payload).subscribe({
-        next: () => {
-          this.toast('success', 'Éxito', 'Empresa creada correctamente');
+        next: (response: CreateCompanyResponse) => {
+          // Guardar la respuesta y mostrar el diálogo
+          this.createdCompanyResponse.set(response);
+          this.showSuccessDialog.set(true);
           this.resetImageState();
-          this.router.navigate(['/test/companies']);
+          this.toast('success', 'Éxito', 'Empresa creada correctamente');
         },
         error: (err) => this.handleBackendError(err),
         complete: () => this._isSubmitting.set(false)
@@ -191,6 +195,21 @@ export class CompanyFormComponent implements OnInit {
         error: (err) => this.handleBackendError(err),
         complete: () => this._isSubmitting.set(false)
       });
+    }
+  }
+
+  // Método para cerrar el diálogo y navegar
+  closeSuccessDialog(): void {
+    this.showSuccessDialog.set(false);
+    this.router.navigate(['/test/companies']);
+  }
+
+  // Método para ver el detalle de la empresa creada
+  viewCompanyDetail(): void {
+    const response = this.createdCompanyResponse();
+    if (response?.companyDto?.companyRuc) {
+      this.showSuccessDialog.set(false);
+      this.router.navigate(['/test/companies/detail', response.companyDto.companyRuc]);
     }
   }
 
@@ -224,7 +243,6 @@ export class CompanyFormComponent implements OnInit {
   }
 
   // Métodos de imagen
-
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
@@ -245,7 +263,6 @@ export class CompanyFormComponent implements OnInit {
       this._hasImageChanged.set(true);
       this._shouldDeleteImage.set(false);
 
-      // Generar previsualización
       const reader = new FileReader();
       reader.onload = () => {
         this._imagePreview.set(reader.result as string);
@@ -301,7 +318,7 @@ export class CompanyFormComponent implements OnInit {
 
   private validateImageFile(file: File): { isValid: boolean; error?: string } {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
+    const maxSizeInBytes = 5 * 1024 * 1024;
 
     if (!allowedTypes.includes(file.type)) {
       return { isValid: false, error: 'Formato de archivo no soportado. Use JPG, PNG, GIF o WebP.' };
@@ -317,7 +334,6 @@ export class CompanyFormComponent implements OnInit {
       const reader = new FileReader();
       reader.onload = () => {
         const base64 = reader.result as string;
-        // Remover el prefijo "data:image/...;base64," si tu backend solo espera la cadena base64
         const base64String = base64.split(',')[1] || base64;
         resolve(base64String);
       };

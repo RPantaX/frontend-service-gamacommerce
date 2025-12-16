@@ -40,7 +40,7 @@ declare var gtag: Function;
 @Component({
   selector: 'app-cart',
   templateUrl: './cart.component.html',
-  styleUrls: ['./cart.component.scss']
+  styleUrls: ['./cart.component.scss', './cart.component2.scss']
 })
 export class CartComponent implements OnInit, OnDestroy {
     private destroy$ = new Subject<void>();

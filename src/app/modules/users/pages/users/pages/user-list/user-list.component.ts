@@ -24,7 +24,7 @@ import { currentUser } from '../../../../../../../@security/redux/selectors/auth
 @Component({
   selector: 'app-user-list',
   templateUrl: './user-list.component.html',
-  styleUrls: ['./user-list.component.scss']
+  styleUrls: ['./user-list.component.scss', './user-list.component2.scss'],
 })
 export class UserListComponent implements OnInit, OnDestroy {
   @ViewChild('dt') table!: Table;

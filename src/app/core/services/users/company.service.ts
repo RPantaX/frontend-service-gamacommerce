@@ -8,6 +8,7 @@ import {
   CompanyDetailDto,
   ContractKindDto,
   CreateCompanyRequest,
+  CreateCompanyResponse,
   ResponseListPageableCompany
 } from '../../../shared/models/users/company.interface';
 
@@ -98,13 +99,13 @@ export class CompanyService {
       );
   }
 
-  createCompany(payload: CreateCompanyRequest): Observable<boolean> {
+  createCompany(payload: CreateCompanyRequest): Observable<CreateCompanyResponse> {
       this.loadingSignal.set(true);
 
       const formData = this.buildFormDataForCompany(payload);
 
       return this.http
-        .post<ApiResponse<boolean>>(`${this.baseUrl}/create`, formData)
+        .post<ApiResponse<CreateCompanyResponse>>(`${this.baseUrl}/create`, formData)
         .pipe(
           map(r => r.data),
           tap(() => {

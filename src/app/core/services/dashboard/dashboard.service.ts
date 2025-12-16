@@ -48,8 +48,8 @@ export class DashboardService {
     );
   }
 
-  getTodayTransactions(): Observable<TodayTransaction[]> {
-    return this.http.get<ApiResponse<TodayTransaction[]>>(`${this.baseUrl}/transactions/today`).pipe(
+  getTodayTransactions(companyId: number): Observable<TodayTransaction[]> {
+    return this.http.get<ApiResponse<TodayTransaction[]>>(`${this.baseUrl}/transactions/today/company/${companyId}`).pipe(
       map(response => response.data)
     );
   }

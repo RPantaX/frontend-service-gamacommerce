@@ -2,8 +2,12 @@
   "welcomeMessage": "Welcome, {{ firstName }}! How are you today?",
   "changeLanguage": "language",
   "changeLanguageTo": "Change language to {{ language }}",
+  "companies": {
+    "title": "Companies",
+    "description": "This is the companies page"
+  },
   "home": {
-    "title": "BraidsByAngie Management",
+    "title": "GamaCommerce Management",
     "description": "This is the home page",
     "modules": {
       "title": "Modules",

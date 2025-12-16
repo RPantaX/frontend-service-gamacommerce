@@ -37,7 +37,7 @@ interface ShippingMethod {
 @Component({
   selector: 'app-checkout',
   templateUrl: './checkout.component.html',
-  styleUrls: ['./checkout.component.scss']
+  styleUrls: ['./checkout.component.scss', './checkout.component2.scss']
 })
 export class CheckoutComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
@@ -135,14 +135,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       price: 25.00,
       estimatedDays: '1-2 días',
       shoppingMethodId: 2
-    },
-    {
-      id: 'pickup',
-      name: 'Recojo en Tienda',
-      description: 'Retira en nuestro local',
-      price: 0.00,
-      estimatedDays: 'Mismo día',
-      shoppingMethodId: 4
     }
   ];
   constructor() {
@@ -345,7 +337,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
     const orderRequest = this.buildOrderRequest();
 
-    this.orderService.createOrder(orderRequest)
+
+    this.orderService.createOrder(orderRequest, this.getCompanyId())
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => {
@@ -417,6 +410,9 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   private getCurrentUserId(): number {
     return Number(this.currentUser?.idUser) || 0;
+  }
+    private getCompanyId(): number {
+    return Number(this.currentUser?.company.id) || 0;
   }
 
   continueShopping(): void {
@@ -563,7 +559,7 @@ onStripePaymentSuccess(paymentResult: PaymentResult): void {
     stripePaymentIntentId: paymentResult.paymentIntentId
   };
 
-  this.orderService.createOrder(orderRequest).subscribe({
+  this.orderService.createOrder(orderRequest, this.getCompanyId()).subscribe({
     next: (order) => {
       console.log('Order created successfully:', order);
 

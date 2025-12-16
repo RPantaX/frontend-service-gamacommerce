@@ -1,6 +1,6 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
+import { Subject, takeUntil, debounceTime, distinctUntilChanged, Observable, take, switchMap } from 'rxjs';
 import { MessageService } from 'primeng/api';
 import { EcommerceService } from '../../../../core/services/ecommerce/ecommerce.service';
 import {
@@ -14,6 +14,9 @@ import {
   SortDirectionType,
   SortByType
 } from '../../../../shared/models/ecommerce/ecommerce.interface';
+import { Store } from '@ngrx/store';
+import { SecurityState } from '../../../../../@security/interfaces/SecurityState';
+import { User } from '../../../../shared/models/auth/auth.interface';
 
 interface ViewMode {
   value: 'grid' | 'list';
@@ -29,7 +32,7 @@ interface SortOptionView {
 @Component({
   selector: 'app-product-list',
   templateUrl: './product-list.component.html',
-  styleUrls: ['./product-list.component.scss']
+  styleUrls: ['./product-list.component.scss', './product-list.component2.scss']
 })
 export class ProductListComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
@@ -38,7 +41,10 @@ export class ProductListComponent implements OnInit, OnDestroy {
   loading = true;
   loadingMore = false;
   filtersLoading = true;
-
+  companyId: number = 1;
+   private store: Store<SecurityState> = inject(Store);
+   currentUserSession$: Observable<User | null>;
+    currentUserSession: User | null = null;
   // Data
   products: EcommerceProduct[] = [];
   filterOptions: ProductFilterOptions | null = null;
@@ -107,7 +113,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
     private messageService: MessageService,
     private router: Router,
     private route: ActivatedRoute
-  ) {}
+  ) {this.currentUserSession$ = this.store.select(state => state.userState.user);}
 
   ngOnInit(): void {
         // Load view mode from localStorage
@@ -276,8 +282,16 @@ export class ProductListComponent implements OnInit, OnDestroy {
       this.loadingMore = true;
     }
     console.log('Loading products with filters:', this.currentFilters);
-    this.ecommerceService.filterProducts(this.currentFilters)
-      .pipe(takeUntil(this.destroy$))
+
+    this.currentUserSession$
+    .pipe(
+      take(1),
+      switchMap(user => {
+          this.companyId = user!.company.id;
+          return this.ecommerceService.filterProducts(this.currentFilters , this.companyId);
+      }
+    )
+  ).pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: EcommerceProductResponse) => {
           if (append) {
@@ -427,8 +441,14 @@ export class ProductListComponent implements OnInit, OnDestroy {
       const nextPage = this.currentPage + 1;
       const newFilters = { ...this.currentFilters, pageNumber: nextPage };
 
-      this.ecommerceService.filterProducts(newFilters)
-        .pipe(takeUntil(this.destroy$))
+      this.currentUserSession$
+        .pipe(
+          take(1),
+          switchMap(user => {
+            this.companyId = user!.company.id;
+            return this.ecommerceService.filterProducts(newFilters, this.companyId);
+          })
+        ).pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response) => {
             this.products = [...this.products, ...response.responseProductList];

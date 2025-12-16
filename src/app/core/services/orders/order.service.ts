@@ -76,8 +76,8 @@ export class OrderService {
    * @param requestShopOrder Order data
    * @returns Observable with created order
    */
-  createOrder(requestShopOrder: RequestShopOrder): Observable<ShopOrderDTO> {
-    return this.http.post<ApiResponse<ShopOrderDTO>>(this.baseUrl, requestShopOrder).pipe(
+  createOrder(requestShopOrder: RequestShopOrder, companyId: number): Observable<ShopOrderDTO> {
+    return this.http.post<ApiResponse<ShopOrderDTO>>(this.baseUrl + `/company/${companyId}`, requestShopOrder).pipe(
       map(response => response.data)
     );
   }

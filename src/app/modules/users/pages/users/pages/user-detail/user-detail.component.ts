@@ -10,7 +10,7 @@ import { RoleDto, UserDto } from '../../../../../../shared/models/users/users.in
 @Component({
   selector: 'app-user-detail',
   templateUrl: './user-detail.component.html',
-  styleUrls: ['./user-detail.component.scss']
+  styleUrls: ['./user-detail.component.scss', './user-detail.component2.scss']
 })
 export class UserDetailComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();

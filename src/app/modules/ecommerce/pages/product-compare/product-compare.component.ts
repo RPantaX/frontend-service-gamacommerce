@@ -10,9 +10,9 @@
 // }
 
 
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
+import { Observable, Subject, switchMap, take, takeUntil } from 'rxjs';
 import { MessageService } from 'primeng/api';
 
 import {
@@ -22,6 +22,9 @@ import {
 } from '../../../../shared/models/ecommerce/ecommerce.interface';
 
 import { EcommerceService } from '../../../../core/services/ecommerce/ecommerce.service';
+import { Store } from '@ngrx/store';
+import { SecurityState } from '../../../../../@security/interfaces/SecurityState';
+import { User } from '../../../../shared/models/auth/auth.interface';
 
 @Component({
   selector: 'app-product-compare',
@@ -30,10 +33,13 @@ import { EcommerceService } from '../../../../core/services/ecommerce/ecommerce.
 })
 export class ProductCompareComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+  private store: Store<SecurityState> = inject(Store);
+   currentUserSession$: Observable<User | null>;
+    currentUserSession: User | null = null;
 
   loading = true;
   errorMessage = '';
-
+  companyId: number = 1;
   baseProduct: EcommerceProduct | null = null;
   similarProducts: EcommerceProduct[] = [];
 
@@ -44,7 +50,7 @@ export class ProductCompareComponent implements OnInit, OnDestroy {
     private router: Router,
     private ecommerceService: EcommerceService,
     private messageService: MessageService
-  ) {}
+  ) { this.currentUserSession$ = this.store.select(state => state.userState.user);}
 
   ngOnInit(): void {
     this.setupBaseBreadcrumb();
@@ -134,9 +140,16 @@ export class ProductCompareComponent implements OnInit, OnDestroy {
       sortBy: 'price',
       sortDirection: 'asc'
     };
+    this.currentUserSession$.pipe(
+     take(1),
+                              // Usa switchMap para cambiar al Observable de la llamada al servicio
+                              switchMap(user => {
+                                this.companyId = user!.company.id;
+                                return this.ecommerceService.filterProducts(filter, this.companyId);
+                              }
 
-    this.ecommerceService.filterProducts(filter)
-      .pipe(takeUntil(this.destroy$))
+    )
+  ).pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: EcommerceProductResponse) => {
           const baseId = this.baseProduct!.productItemId;
@@ -152,6 +165,7 @@ export class ProductCompareComponent implements OnInit, OnDestroy {
           this.loading = false;
         }
       });
+
   }
 
   // ---------------------------------------------------------------------------

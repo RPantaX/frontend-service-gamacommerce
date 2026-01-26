@@ -68,6 +68,11 @@ export class DashboardComponent implements OnInit,AfterViewInit ,OnDestroy {
   }
 
   ngOnInit(): void {
+        this.currentUserSession$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(user => {
+      this.currentUserSession = user;
+    });
     this.loadDashboardData();
   }
  ngAfterViewInit(): void {
@@ -90,7 +95,7 @@ export class DashboardComponent implements OnInit,AfterViewInit ,OnDestroy {
 
   private loadSummaryData(): void {
     this.loading.summary = true;
-    this.dashboardService.getDashboardSummary()
+    this.dashboardService.getDashboardSummary(this.currentUserSession?.company.id!)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
@@ -109,7 +114,7 @@ export class DashboardComponent implements OnInit,AfterViewInit ,OnDestroy {
     const startDate = this.customDateRange?.[0] ? this.formatDate(this.customDateRange[0]) : undefined;
     const endDate = this.customDateRange?.[1] ? this.formatDate(this.customDateRange[1]) : undefined;
 
-    this.dashboardService.getSalesAnalytics(this.analyticsType, this.analyticsPeriod, startDate, endDate)
+    this.dashboardService.getSalesAnalytics(this.currentUserSession?.company.id!, this.analyticsType, this.analyticsPeriod, startDate, endDate)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
@@ -147,7 +152,7 @@ export class DashboardComponent implements OnInit,AfterViewInit ,OnDestroy {
 
   private loadTopProducts(): void {
     this.loading.topProducts = true;
-    this.dashboardService.getTopProducts(this.topProductsPeriod)
+    this.dashboardService.getTopProducts(this.topProductsPeriod, this.currentUserSession?.company.id!)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {

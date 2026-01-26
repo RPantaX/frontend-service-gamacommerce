@@ -19,17 +19,18 @@ export class DashboardService {
 
   constructor(private http: HttpClient) { }
 
-  getDashboardSummary(): Observable<DashboardSummary> {
-    return this.http.get<ApiResponse<DashboardSummary>>(`${this.baseUrl}/summary`).pipe(
+  getDashboardSummary(companyId: number): Observable<DashboardSummary> {
+    return this.http.get<ApiResponse<DashboardSummary>>(`${this.baseUrl}/summary/company/${companyId}`).pipe(
       map(response => response.data)
     );
   }
 
   getSalesAnalytics(
+    companyId: number,
     type: string = 'PRODUCT',
     period: string = 'MONTHLY',
     startDate?: string,
-    endDate?: string
+    endDate?: string,
   ): Observable<SalesAnalytics[]> {
     let params = new HttpParams()
       .set('type', type)
@@ -43,21 +44,21 @@ export class DashboardService {
       params = params.set('endDate', endDate);
     }
 
-    return this.http.get<ApiResponse<SalesAnalytics[]>>(`${this.baseUrl}/analytics`, { params }).pipe(
+    return this.http.get<ApiResponse<SalesAnalytics[]>>(`${this.baseUrl}/analytics/company/${companyId}`, { params }).pipe(
       map(response => response.data)
     );
   }
 
-  getTodayTransactions(): Observable<TodayTransaction[]> {
-    return this.http.get<ApiResponse<TodayTransaction[]>>(`${this.baseUrl}/transactions/today`).pipe(
+  getTodayTransactions(companyId: number): Observable<TodayTransaction[]> {
+    return this.http.get<ApiResponse<TodayTransaction[]>>(`${this.baseUrl}/transactions/today/company/${companyId}`).pipe(
       map(response => response.data)
     );
   }
 
-  getTopProducts(period: string = 'MONTHLY'): Observable<TopProduct[]> {
+  getTopProducts(period: string = 'MONTHLY', companyId: number): Observable<TopProduct[]> {
     const params = new HttpParams().set('period', period);
 
-    return this.http.get<ApiResponse<TopProduct[]>>(`${this.baseUrl}/top-products`, { params }).pipe(
+    return this.http.get<ApiResponse<TopProduct[]>>(`${this.baseUrl}/top-products/company/${companyId}`, { params }).pipe(
       map(response => response.data)
     );
   }

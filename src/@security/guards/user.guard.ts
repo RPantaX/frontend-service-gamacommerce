@@ -47,10 +47,15 @@ export class UserGuard {
 				}
 
 				// Verificar si el usuario tiene el rol requerido
-				const hasRequiredRole = user.roles.some(userRole =>
-					userRole.name === requiredRole ||
-					userRole.name === EnumRolesUsuario.ADMIN // Los admin siempre tienen acceso
-				);
+				const hasRequiredRole = user.roles.some(userRole => {
+        // 1. Si el rol requerido es SUPERADMIN, solo el SUPERADMIN pasa.
+        if (requiredRole === EnumRolesUsuario.SUPERADMIN) {
+          return userRole.name === EnumRolesUsuario.SUPERADMIN;
+        }
+
+        // 2. Para otros roles, permitir el rol requerido O el rol ADMIN.
+        return userRole.name === requiredRole || userRole.name === EnumRolesUsuario.ADMIN;
+      });
 
 				if (!hasRequiredRole) {
 					console.warn(`Acceso denegado. Se requiere rol: ${requiredRole}, Usuario tiene: ${user.roles.join(', ')}`);

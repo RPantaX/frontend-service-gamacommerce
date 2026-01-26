@@ -1,6 +1,6 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subject, takeUntil, forkJoin } from 'rxjs';
+import { Subject, takeUntil, forkJoin, Observable, take, switchMap } from 'rxjs';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { EcommerceService } from '../../../../core/services/ecommerce/ecommerce.service';
 import {
@@ -13,6 +13,9 @@ import {
   Review,
   EcommerceProductDetail
 } from '../../../../shared/models/ecommerce/ecommerce.interface';
+import { Store } from '@ngrx/store';
+import { SecurityState } from '../../../../../@security/interfaces/SecurityState';
+import { User } from '../../../../shared/models/auth/auth.interface';
 declare var gtag: Function;
 interface VariationGroup {
   name: string;
@@ -35,16 +38,18 @@ interface ProductImage {
 @Component({
   selector: 'app-product-detail',
   templateUrl: './product-detail.component.html',
-  styleUrls: ['./product-detail.component.scss']
+  styleUrls: ['./product-detail.component.scss','./product-detail.component2.scss']
 })
 export class ProductDetailComponent implements OnInit, OnDestroy {
  private destroy$ = new Subject<void>();
-
+companyId: number = 1;
   // Loading states
   loading = true;
   addingToCart = false;
   loadingRelated = true;
-
+ private store: Store<SecurityState> = inject(Store);
+  currentUserSession$: Observable<User | null>;
+    currentUserSession: User | null = null;
   // Data
   product: ProductDetail | null = null;
   relatedProducts: EcommerceProductDetail[] = [];
@@ -89,7 +94,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     private ecommerceService: EcommerceService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService
-  ) {}
+  ) {this.currentUserSession$ = this.store.select(state => state.userState.user);}
 
   ngOnInit(): void {
     this.route.params
@@ -406,10 +411,18 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
 
     this.loadingRelated = true;
 
-    this.ecommerceService.getRelatedProducts(
-      this.product.productId,
-      this.product.responseCategory.productCategoryId,
-      4
+    this.currentUserSession$.pipe(
+      take(1),
+      switchMap(user => {
+         this.companyId = user!.company.id;
+         return this.ecommerceService.getRelatedProducts(
+        this.product!.productId,
+        this.product!.responseCategory.productCategoryId,
+        4,
+      this.companyId
+    )
+      }
+    )
     ).pipe(
       takeUntil(this.destroy$)
     ).subscribe({

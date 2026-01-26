@@ -10,7 +10,7 @@ import { RequestShopOrder, ProductRequest, RequestAddress } from '../../../../sh
 import { User } from '../../../../shared/models/auth/auth.interface';
 import { Store } from '@ngrx/store';
 import { SecurityState } from '../../../../../@security/interfaces/SecurityState';
-
+import { PaymentResult } from './stripe-payment/stripe-payment.component';
 interface CheckoutStep {
   id: number;
   label: string;
@@ -37,7 +37,7 @@ interface ShippingMethod {
 @Component({
   selector: 'app-checkout',
   templateUrl: './checkout.component.html',
-  styleUrls: ['./checkout.component.scss']
+  styleUrls: ['./checkout.component.scss', './checkout.component2.scss']
 })
 export class CheckoutComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
@@ -135,14 +135,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       price: 25.00,
       estimatedDays: '1-2 días',
       shoppingMethodId: 2
-    },
-    {
-      id: 'pickup',
-      name: 'Recojo en Tienda',
-      description: 'Retira en nuestro local',
-      price: 0.00,
-      estimatedDays: 'Mismo día',
-      shoppingMethodId: 4
     }
   ];
   constructor() {
@@ -345,7 +337,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
     const orderRequest = this.buildOrderRequest();
 
-    this.orderService.createOrder(orderRequest)
+
+    this.orderService.createOrder(orderRequest, this.getCompanyId())
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => {
@@ -415,14 +408,11 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     };
   }
 
-  private getReservationId(): number {
-    // Extract reservation ID from cart if it contains services
-    const serviceItem = this.cart().items.find(item => item.type === 'service');
-    return serviceItem ? serviceItem.id : 0;
-  }
-
   private getCurrentUserId(): number {
     return Number(this.currentUser?.idUser) || 0;
+  }
+    private getCompanyId(): number {
+    return Number(this.currentUser?.company.id) || 0;
   }
 
   continueShopping(): void {
@@ -534,4 +524,117 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   trackByItemId(index: number, item: CartItem): number {
     return item.id;
   }
+  // Agregar en tu checkout.component.ts existente
+
+// Dentro de tu clase CheckoutComponent, agregar:
+
+/**
+ * Maneja el éxito del pago con Stripe
+ */
+onStripePaymentSuccess(paymentResult: PaymentResult): void {
+  console.log('Payment successful:', paymentResult);
+
+  // Actualizar el estado del pedido con la información del pago
+  this.processingPayment.set(true);
+
+  // Crear la orden con el paymentIntentId de Stripe
+  const orderRequest: RequestShopOrder = {
+    productRequestList: this.cart().items
+      .filter(item => item.type === 'product')
+      .map(item => ({
+        productId: item.id,
+        productQuantity: item.quantity
+      })),
+    reservationId: this.getReservationId(),
+    userId: this.getUserId(),
+    requestAdress: {
+      adressStreet: this.shippingForm.get('address')?.value,
+      adressCity: this.shippingForm.get('city')?.value,
+      adressState: this.shippingForm.get('district')?.value,
+      adressCountry: 'Perú',
+      adressPostalCode: this.shippingForm.get('postalCode')?.value
+    },
+    shoppingMethodId: Number(this.selectedShippingMethod()?.id) || 1,
+    // Agregar el paymentIntentId de Stripe
+    stripePaymentIntentId: paymentResult.paymentIntentId
+  };
+
+  this.orderService.createOrder(orderRequest, this.getCompanyId()).subscribe({
+    next: (order) => {
+      console.log('Order created successfully:', order);
+
+      this.orderId.set(order.shopOrderId.toString());
+      this.orderTotal.set(paymentResult.amount);
+      this.orderCompleted.set(true);
+      this.processingPayment.set(false);
+
+      // Limpiar el carrito
+      this.clearCart();
+
+      // Mostrar notificación de éxito
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Pago Exitoso',
+        detail: `Tu orden #${order.shopOrderId} ha sido procesada correctamente`,
+        life: 5000
+      });
+    },
+    error: (error) => {
+      console.error('Error creating order:', error);
+      this.processingPayment.set(false);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Hubo un problema al crear tu orden. Por favor contacta a soporte.',
+        life: 5000
+      });
+    }
+  });
+}
+
+/**
+ * Maneja los errores del pago con Stripe
+ */
+onStripePaymentError(error: string): void {
+  console.error('Payment error:', error);
+
+  this.messageService.add({
+    severity: 'error',
+    summary: 'Error en el Pago',
+    detail: error || 'No se pudo procesar tu pago. Por favor intenta de nuevo.',
+    life: 5000
+  });
+}
+
+/**
+ * Determina si debe mostrar el componente de Stripe
+ */
+shouldShowStripePayment(): boolean {
+  return this.selectedPaymentMethod()?.id === 'visa' ||
+         this.selectedPaymentMethod()?.id === 'credit_card';
+}
+
+/**
+ * Obtiene el total a pagar
+ */
+getTotalAmount(): number {
+  return this.cart().total;
+}
+
+// Helper methods
+private getReservationId(): number {
+  // Implementar según tu lógica
+  return 0; // o el ID de la reservación si aplica
+}
+
+private getUserId(): number {
+  // Obtener del servicio de autenticación
+  return 1; // Reemplazar con el userId real
+}
+
+private clearCart(): void {
+  // Implementar limpieza del carrito
+  this.cart().items = [];
+  this.cart().total = 0;
+}
 }

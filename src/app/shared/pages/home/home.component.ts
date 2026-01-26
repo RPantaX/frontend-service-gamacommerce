@@ -163,7 +163,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   private loadQuickStats(): void {
     // Load quick stats from dashboard service
-    this.dashboardService.getTodayTransactions()
+    this.dashboardService.getTodayTransactions(this.currentUser?.company.id!)
       .pipe(takeUntil(this.destroy$))
       .subscribe(transactions => {
         this.quickStats.ordersToday = transactions.length;

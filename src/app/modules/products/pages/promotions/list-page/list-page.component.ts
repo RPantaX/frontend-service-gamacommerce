@@ -18,7 +18,10 @@ import { DatePipe } from '@angular/common';
 
 import { PromotionService } from '../../../../../core/services/products/promotion.service';
 import { PromotionDTO, PromotionResponsePageable, PromotionWithCategories } from '../../../../../shared/models/promotions/promotion.interface';
-import { Subscription } from 'rxjs';
+import { filter, Observable, Subscription, switchMap, take } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { SecurityState } from '../../../../../../@security/interfaces/SecurityState';
+import { User } from '../../../../../shared/models/auth/auth.interface';
 
 interface Status {
   label: string;
@@ -57,7 +60,7 @@ export class PromotionListComponent implements OnInit, OnDestroy {
 
   promotions: PromotionWithCategories[] = [];
   statuses: Status[] = [];
-
+  private store: Store<SecurityState> = inject(Store);
   // Pagination and sorting
   totalRecords: number = 0;
   rows: number = 10;
@@ -72,11 +75,14 @@ export class PromotionListComponent implements OnInit, OnDestroy {
   companyId: number = 1; // The companyId will be set in the backend according to the logged in user
   // Add a field to store the subscription
   private refreshSubscription!: Subscription;
-
+  currentUserSession$: Observable<User | null>;
+  currentUserSession: User | null = null;
   promotionService = inject(PromotionService);
   datePipe = inject(DatePipe);
 
-  constructor() {}
+  constructor() {
+    this.currentUserSession$ = this.store.select(state => state.userState.user);
+  }
 
   ngOnInit() {
     this.initializeStatuses();
@@ -105,7 +111,7 @@ export class PromotionListComponent implements OnInit, OnDestroy {
    * @param event Optional lazy load event from PrimeNG Table
    */
   loadPromotions(event?: TableLazyLoadEvent) {
-    this.loading = true;
+    this.loading = false;
 
     // Update pagination and sorting params from table event
     if (event) {
@@ -146,12 +152,23 @@ export class PromotionListComponent implements OnInit, OnDestroy {
     }
 
     // Call service to get paginated data
-    this.promotionService.getPageablePromotionsbyCompanyId(
-      this.currentPage,
-      this.rows,
-      sortBy,
-      sortDir,
-      this.companyId
+    this.currentUserSession$
+    .pipe(
+      filter(user => user !== null && user.company.id !== undefined),
+                          // Obtén solo el valor actual e inmediatamente desuscríbete
+                          take(1),
+                          switchMap(user => {
+                            this.companyId = user!.company.id;
+                            return this.promotionService.getPageablePromotionsbyCompanyId(
+                              this.currentPage,
+                              this.rows,
+                              sortBy,
+                              sortDir,
+                              this.companyId
+                            )
+                          }
+                          )
+
     ).subscribe({
       next: (response: PromotionResponsePageable) => {
         this.promotions = response.responsePromotionList;

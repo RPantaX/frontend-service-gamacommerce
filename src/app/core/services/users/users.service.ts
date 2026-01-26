@@ -64,6 +64,23 @@ export class UserService {
       })
     );
   }
+    getAllUsersByCompanyId(companyId: number): Observable<UserDto[]> {
+    this.loadingSignal.set(true);
+    this.errorSignal.set(null);
+
+    return this.http.get<ApiResponse<UserDto[]>>(`${this.baseUrl}/company/${companyId}`).pipe(
+      map(response => response.data),
+      tap(users => {
+        this.usersSignal.set(users);
+        this.loadingSignal.set(false);
+      }),
+      catchError(error => {
+        this.loadingSignal.set(false);
+        this.errorSignal.set(error.message || 'Error loading users');
+        return of([]);
+      })
+    );
+  }
 
   /**
    * Obtiene un usuario por ID
@@ -112,7 +129,8 @@ export class UserService {
       enabled: userData.enabled,
       admin: userData.admin,
       document: userData.document,
-      keycloakId: userData.keycloakId
+      keycloakId: userData.keycloakId,
+      companyId: userData.companyId
     };
 
     return this.http.post<ApiResponse<UserDto>>(`${this.baseUrl}`, userRequest).pipe(

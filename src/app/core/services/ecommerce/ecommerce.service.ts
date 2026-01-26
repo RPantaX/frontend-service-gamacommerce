@@ -26,8 +26,6 @@ import {
 export class EcommerceService {
   private baseUrlProducts = environment.baseUrl + '/product-service/product';
   private baseUrlServices = environment.baseUrl + '/reservation-service/service';
-  //constant
-  companyId: number = 1;
   // Cart state management
   private cartSubject = new BehaviorSubject<Cart>(this.getInitialCart());
   public cart$ = this.cartSubject.asObservable();
@@ -49,18 +47,18 @@ export class EcommerceService {
   /**
    * Filter products for e-commerce
    */
-  filterProducts(filter: EcommerceProductFilter): Observable<EcommerceProductResponse> {
+  filterProducts(filter: EcommerceProductFilter, companyId: number): Observable<EcommerceProductResponse> {
     return this.http.post<ApiResponse<EcommerceProductResponse>>(
-      `${this.baseUrlProducts}/filter/company/${this.companyId}`,
+      `${this.baseUrlProducts}/filter/company/${companyId}`,
       this.transformProductFilter(filter)
     ).pipe(
       map(response => response.data),
       shareReplay(1)
     );
   }
-    filterProductsDetail(filter: EcommerceProductFilter): Observable<EcommerceProductResponseDetail> {
+    filterProductsDetail(filter: EcommerceProductFilter, companyId: number): Observable<EcommerceProductResponseDetail> {
     return this.http.post<ApiResponse<EcommerceProductResponseDetail>>(
-      `${this.baseUrlProducts}/filter/company/details/${this.companyId}`,
+      `${this.baseUrlProducts}/filter/company/details/${companyId}`,
       this.transformProductFilter(filter)
     ).pipe(
       map(response => response.data),
@@ -84,13 +82,13 @@ export class EcommerceService {
   /**
    * Get featured products
    */
-  getFeaturedProducts(limit: number = 8): Observable<EcommerceProduct[]> {
+  getFeaturedProducts(limit: number = 8, companyId: number): Observable<EcommerceProduct[]> {
     const filter: EcommerceProductFilter = {
       featured: true,
       pageSize: limit,
       pageNumber: 0
     };
-    return this.filterProducts(filter).pipe(
+    return this.filterProducts(filter, companyId).pipe(
       map(response => response.responseProductList)
     );
   }
@@ -98,14 +96,14 @@ export class EcommerceService {
   /**
    * Get new products
    */
-  getNewProducts(limit: number = 8): Observable<EcommerceProduct[]> {
+  getNewProducts(limit: number = 8, companyId: number): Observable<EcommerceProduct[]> {
     const filter: EcommerceProductFilter = {
       newProducts: true,
       pageSize: limit,
       pageNumber: 0,
       sortBy: 'newest'
     };
-    return this.filterProducts(filter).pipe(
+    return this.filterProducts(filter, companyId).pipe(
       map(response => response.responseProductList)
     );
   }
@@ -113,13 +111,13 @@ export class EcommerceService {
   /**
    * Get related products
    */
-  getRelatedProducts(productId: number, categoryId: number, limit: number = 4): Observable<EcommerceProductDetail[]> {
+  getRelatedProducts(productId: number, categoryId: number, limit: number = 4, companyId: number): Observable<EcommerceProductDetail[]> {
     const filter: EcommerceProductFilter = {
       categoryIds: [categoryId],
       pageSize: limit,
       pageNumber: 0
     };
-    return this.filterProductsDetail(filter).pipe(
+    return this.filterProductsDetail(filter, companyId).pipe(
       map(response => response.responseProductList.filter(p => p.productId !== productId))
     );
   }
@@ -127,14 +125,14 @@ export class EcommerceService {
   /**
    * Search products
    */
-  searchProducts(searchTerm: string, filters?: Partial<EcommerceProductFilter>): Observable<EcommerceProductResponse> {
+  searchProducts(searchTerm: string,companyId : number , filters?: Partial<EcommerceProductFilter>): Observable<EcommerceProductResponse> {
     const filter: EcommerceProductFilter = {
       searchTerm,
       pageSize: 12,
       pageNumber: 0,
       ...filters
     };
-    return this.filterProducts(filter);
+    return this.filterProducts(filter, companyId);
   }
 
   /**

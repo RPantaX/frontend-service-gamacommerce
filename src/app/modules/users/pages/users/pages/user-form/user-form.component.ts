@@ -2,7 +2,7 @@
 import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Subject, takeUntil, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
+import { Subject, takeUntil, debounceTime, distinctUntilChanged, switchMap, Observable, filter, take } from 'rxjs';
 import { MessageService } from 'primeng/api';
 
 import {
@@ -18,11 +18,14 @@ import {
   USER_ERROR_MESSAGES
 } from '../../../../../../shared/models/users/users.interface';
 import { UserService } from '../../../../../../core/services/users/users.service';
+import { User } from '../../../../../../shared/models/auth/auth.interface';
+import { Store } from '@ngrx/store';
+import { SecurityState } from '../../../../../../../@security/interfaces/SecurityState';
 
 @Component({
   selector: 'app-user-form',
   templateUrl: './user-form.component.html',
-  styleUrls: ['./user-form.component.scss']
+  styleUrls: ['./user-form.component.scss', './user-form.component2.scss']
 })
 export class UserFormComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
@@ -31,6 +34,7 @@ export class UserFormComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private userService = inject(UserService);
   private messageService = inject(MessageService);
+  private store: Store<SecurityState> = inject(Store);
 
   formErrorMessages = computed(() => Object.values(this.formErrors()));
   // Signals para manejo de estado
@@ -41,6 +45,8 @@ export class UserFormComponent implements OnInit, OnDestroy {
   isEditMode = signal<boolean>(false);
   formErrors = signal<UserFormErrors>({});
 
+  currentUserSession$: Observable<User | null>;
+  currentUserSession: User | null = null;
   // Employee matching
   employeeMatch = signal<EmployeeMatchDto | null>(null);
   searchingEmployee = signal<boolean>(false);
@@ -93,6 +99,8 @@ export class UserFormComponent implements OnInit, OnDestroy {
   });
 
   constructor() {
+    this.currentUserSession$ = this.store.select(state => state.userState.user);
+
     this.initializeForm();
   }
 
@@ -456,21 +464,34 @@ export class UserFormComponent implements OnInit, OnDestroy {
   }
 
   private createUser(): void {
-    const formData = this.buildCreateUserRequest();
+      // 1. Obtener el companyId del Store
+      this.currentUserSession$
+          .pipe(
+              // Filtra nulos y asegura que tengamos el objeto User
+              filter(user => user !== null && user.company.id !== undefined),
+              // Obtén solo el valor actual e inmediatamente desuscríbete
+              take(1),
+              // Usa switchMap para cambiar al Observable de la llamada al servicio
+              switchMap(user => {
+                console.log('Current User from Store:', user);
+                  const companyId = user!.company.id;
+                  const formData = this.buildCreateUserRequest(companyId);
 
-    this.userService.createUser(formData)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.saving.set(false);
-          this.showSuccess('Usuario creado exitosamente');
-          this.navigateToList();
-        },
-        error: (error) => {
-          this.saving.set(false);
-          this.showError('Error al crear usuario: ' + error.message);
-        }
-      });
+                  return this.userService.createUser(formData);
+              }),
+              takeUntil(this.destroy$)
+          )
+          .subscribe({
+              next: () => {
+                  this.saving.set(false);
+                  this.showSuccess('Usuario creado exitosamente');
+                  this.navigateToList();
+              },
+              error: (error) => {
+                  this.saving.set(false);
+                  this.showError('Error al crear usuario: ' + error.message);
+              }
+          });
   }
 
   private updateUser(): void {
@@ -494,7 +515,7 @@ export class UserFormComponent implements OnInit, OnDestroy {
       });
   }
 
-  private buildCreateUserRequest(): CreateUserRequest {
+  private buildCreateUserRequest(companyId: number): CreateUserRequest {
     const formValue = this.userForm.value;
 
     return {
@@ -505,7 +526,8 @@ export class UserFormComponent implements OnInit, OnDestroy {
       enabled: formValue.enabled,
       admin: formValue.admin,
       document: formValue.document?.trim() || undefined,
-      keycloakId: formValue.keycloakId?.trim() || undefined
+      keycloakId: formValue.keycloakId?.trim() || undefined,
+      companyId: companyId
     };
   }
 

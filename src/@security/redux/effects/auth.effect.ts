@@ -27,6 +27,7 @@ export class AuthEffect {
 					mergeMap((res) => this.authService.redirectTo(res)),
 					switchMap((res) => {
             this.authService.setUserInLocalStorage(token, res);
+            console.log('Usuario logueado:', res);
 						return [
 							insertUserLogin({
 								user: res,

@@ -1,0 +1,354 @@
+<div class="company-detail-container">
+  <!-- Header with actions -->
+  <div class="header-section">
+    <div class="flex align-items-center justify-content-between mb-4">
+      <h2 class="page-title">
+        <i class="pi pi-building mr-2"></i>
+        Detalle de Empresa
+      </h2>
+      <div class="action-buttons">
+        <p-button
+          icon="pi pi-arrow-left"
+          label="Volver"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="goBack()"
+          class="mr-2"
+        ></p-button>
+        <p-button
+          *ngIf="company"
+          icon="pi pi-pencil"
+          label="Editar"
+          severity="primary"
+          (onClick)="editCompany()"
+        ></p-button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <p-progressSpinner
+      styleClass="custom-spinner"
+      strokeWidth="4"
+      animationDuration="1s"
+    ></p-progressSpinner>
+    <p class="loading-text">Cargando información de la empresa...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-container">
+    <p-card>
+      <div class="flex align-items-center">
+        <i class="pi pi-exclamation-triangle text-4xl text-red-500 mr-3"></i>
+        <div>
+          <h3 class="m-0 mb-2">Error al cargar los datos</h3>
+          <p class="m-0">{{ error }}</p>
+        </div>
+      </div>
+    </p-card>
+  </div>
+
+  <!-- Company Details -->
+  <div *ngIf="company && !loading" class="detail-content">
+    <!-- Company Information Card -->
+    <p-card class="mb-4">
+      <ng-template pTemplate="header">
+        <div class="card-header-custom">
+          <img
+            *ngIf="company.image"
+            [src]="company.image"
+            [alt]="company.companyName"
+            class="company-logo"
+            (error)="$any($event.target).src='assets/images/placeholder-company.png'"
+          />
+          <div *ngIf="!company.image" class="company-logo-placeholder">
+            <i class="pi pi-building"></i>
+          </div>
+          <div class="header-info">
+            <h3 class="company-name">{{ company.companyName }}</h3>
+            <p class="company-trade-name">{{ company.companyTradeName }}</p>
+          </div>
+        </div>
+      </ng-template>
+
+      <div class="grid">
+        <div class="col-12 md:col-6">
+          <div class="info-item">
+            <label>RUC</label>
+            <p>{{ company.companyRuc }}</p>
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="info-item">
+            <label>Tipo de Empresa</label>
+            <p>{{ company.companyTypeName }}</p>
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="info-item">
+            <label>Teléfono</label>
+            <p>
+              <i class="pi pi-phone mr-2"></i>
+              {{ company.companyPhone }}
+            </p>
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="info-item">
+            <label>Email</label>
+            <p>
+              <i class="pi pi-envelope mr-2"></i>
+              {{ company.companyEmail }}
+            </p>
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="info-item">
+            <label>Tipo de Documento</label>
+            <p>{{ company.documentTypeName }}</p>
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="info-item">
+            <label>Número de Documento</label>
+            <p>{{ company.companyDocumentNumber }}</p>
+          </div>
+        </div>
+      </div>
+    </p-card>
+
+    <!-- Address Information -->
+    <p-card class="mb-4">
+      <ng-template pTemplate="header">
+        <div class="card-title">
+          <i class="pi pi-map-marker mr-2"></i>
+          Dirección de la Empresa
+        </div>
+      </ng-template>
+
+      <div class="grid" *ngIf="company.companyAddressDto">
+        <div class="col-12">
+          <div class="info-item">
+            <label>Calle</label>
+            <p>{{ company.companyAddressDto.street }}</p>
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="info-item">
+            <label>Ciudad</label>
+            <p>{{ company.companyAddressDto.city }}</p>
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="info-item">
+            <label>Estado</label>
+            <p>{{ company.companyAddressDto.state }}</p>
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="info-item">
+            <label>Código Postal</label>
+            <p>{{ company.companyAddressDto.postalCode }}</p>
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="info-item">
+            <label>País</label>
+            <p>{{ company.companyAddressDto.country }}</p>
+          </div>
+        </div>
+      </div>
+    </p-card>
+
+    <!-- Contact Person Information -->
+    <p-card class="mb-4">
+      <ng-template pTemplate="header">
+        <div class="card-title">
+          <i class="pi pi-user mr-2"></i>
+          Persona de Contacto
+        </div>
+      </ng-template>
+
+      <div class="grid" *ngIf="company.personDto">
+        <div class="col-12 md:col-6">
+          <div class="info-item">
+            <label>Nombre Completo</label>
+            <p>{{ company.personDto.fullName }}</p>
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="info-item">
+            <label>Tipo de Documento</label>
+            <p>{{ company.personDto.documentType?.value || 'N/A' }}</p>
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="info-item">
+            <label>Número de Documento</label>
+            <p>{{ company.personDto.documentNumber }}</p>
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="info-item">
+            <label>Teléfono</label>
+            <p>
+              <i class="pi pi-phone mr-2"></i>
+              {{ company.personDto.phoneNumber }}
+            </p>
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="info-item">
+            <label>Email</label>
+            <p>
+              <i class="pi pi-envelope mr-2"></i>
+              {{ company.personDto.emailAddress }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Person Address -->
+        <div class="col-12" *ngIf="company.personDto.address">
+          <p-divider></p-divider>
+          <h4 class="mt-3 mb-3">Dirección de la Persona</h4>
+          <div class="grid">
+            <div class="col-12">
+              <div class="info-item">
+                <label>Calle</label>
+                <p>{{ company.personDto.address.street }}</p>
+              </div>
+            </div>
+            <div class="col-12 md:col-4">
+              <div class="info-item">
+                <label>Ciudad</label>
+                <p>{{ company.personDto.address.city }}</p>
+              </div>
+            </div>
+            <div class="col-12 md:col-4">
+              <div class="info-item">
+                <label>Estado</label>
+                <p>{{ company.personDto.address.state }}</p>
+              </div>
+            </div>
+            <div class="col-12 md:col-4">
+              <div class="info-item">
+                <label>País</label>
+                <p>{{ company.personDto.address.country }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </p-card>
+
+    <!-- Contract Information -->
+    <p-card class="mb-4">
+      <ng-template pTemplate="header">
+        <div class="card-title">
+          <i class="pi pi-file mr-2"></i>
+          Información del Contrato
+        </div>
+      </ng-template>
+
+      <div class="grid" *ngIf="company.contractDto">
+        <div class="col-12 md:col-6">
+          <div class="info-item">
+            <label>Tipo de Contrato</label>
+            <p>{{ company.contractDto.contractKindDto?.value || 'N/A' }}</p>
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="info-item">
+            <label>Duración (Meses)</label>
+            <p>{{ company.contractDto.timeMonth }} meses</p>
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="info-item">
+            <label>Estado del Contrato</label>
+            <p>
+              <p-tag
+                [severity]="getContractStatusSeverity(company.contractDto.contractState)"
+                [value]="company.contractDto.contractState ? 'Vigente' : 'No Vigente'"
+              ></p-tag>
+            </p>
+          </div>
+        </div>
+        <div class="col-12 md:col-6">
+          <div class="info-item">
+            <label>Estado Activo</label>
+            <p>
+              <p-tag
+                [severity]="getContractStatusSeverity(company.contractDto.active)"
+                [value]="getContractStatusLabel(company.contractDto.active)"
+              ></p-tag>
+            </p>
+          </div>
+        </div>
+      </div>
+    </p-card>
+
+    <!-- Users List -->
+    <p-card *ngIf="company.responseUsers && company.responseUsers.length > 0">
+      <ng-template pTemplate="header">
+        <div class="card-title">
+          <i class="pi pi-users mr-2"></i>
+          Usuarios Asociados ({{ company.responseUsers.length }})
+        </div>
+      </ng-template>
+
+      <p-table
+        [value]="company.responseUsers"
+        [tableStyle]="{ 'min-width': '50rem' }"
+        styleClass="p-datatable-sm"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Usuario</th>
+            <th>Email</th>
+            <th>Estado</th>
+            <th>Admin</th>
+            <th>Roles</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-user>
+          <tr>
+            <td>
+              <div class="flex align-items-center">
+                <i class="pi pi-user mr-2"></i>
+                {{ user.username }}
+              </div>
+            </td>
+            <td>{{ user.email }}</td>
+            <td>
+              <p-tag
+                [severity]="user.enabled === false ? 'danger' : 'success'"
+                [value]="user.enabled === false ? 'Inactivo' : 'Activo'"
+              ></p-tag>
+            </td>
+            <td>
+              <i
+                [class]="user.admin ? 'pi pi-check-circle text-green-500' : 'pi pi-times-circle text-red-500'"
+                style="font-size: 1.2rem"
+              ></i>
+            </td>
+            <td>
+              <p-tag
+                *ngFor="let role of user.roles"
+                [value]="role.name"
+                severity="info"
+                class="mr-1"
+              ></p-tag>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="5" class="text-center">No hay usuarios asociados</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-card>
+  </div>
+</div>

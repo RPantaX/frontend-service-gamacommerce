@@ -2,9 +2,9 @@
 // ECOMMERCE HOME COMPONENT - TypeScript
 // ============================================================================
 
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { Subject, takeUntil, forkJoin } from 'rxjs';
+import { Subject, takeUntil, forkJoin, Observable } from 'rxjs';
 import { MessageService } from 'primeng/api';
 import { EcommerceService } from '../../../../core/services/ecommerce/ecommerce.service';
 import {
@@ -13,6 +13,9 @@ import {
   CategoryOption,
   CartItem
 } from '../../../../shared/models/ecommerce/ecommerce.interface';
+import { Store } from '@ngrx/store';
+import { SecurityState } from '../../../../../@security/interfaces/SecurityState';
+import { User } from '../../../../shared/models/auth/auth.interface';
 
 interface HeroSection {
   title: string;
@@ -34,7 +37,7 @@ interface Collection {
 @Component({
   selector: 'app-ecommerce-home',
   templateUrl: './ecommerce-home.component.html',
-  styleUrls: ['./ecommerce-home.component.scss']
+  styleUrls: ['./ecommerce-home.component.scss', '././ecommerce-home.component2.scss']
 })
 export class EcommerceHomeComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
@@ -44,11 +47,14 @@ export class EcommerceHomeComponent implements OnInit, OnDestroy {
   featuredProductsLoading = true;
   featuredServicesLoading = true;
   newProductsLoading = true;
-
+  private store: Store<SecurityState> = inject(Store);
+  // User data
+  currentUser$: Observable<User | null>;
+  currentUser: User | null = null;
   // Hero section
   heroSection: HeroSection = {
-    title: 'AngieBraids',
-    subtitle: 'Explora nuestra colección premium de productos y servicios para el cuidado del cabello',
+    title: 'GamaCommerce',
+    subtitle: 'Explora nuestra colección premium de productos',
     backgroundImage: 'assets/images/hero-bg.jpg',
     ctaText: 'Explorar Productos',
     ctaLink: '/ecommerce/products'
@@ -151,9 +157,14 @@ export class EcommerceHomeComponent implements OnInit, OnDestroy {
     private ecommerceService: EcommerceService,
     private messageService: MessageService,
     private router: Router
-  ) {}
+  ) {this.currentUser$ = this.store.select(state => state.userState.user);}
 
   ngOnInit(): void {
+        this.currentUser$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(user => {
+      this.currentUser = user;
+    });
     this.loadHomeData();
   }
 
@@ -169,9 +180,9 @@ export class EcommerceHomeComponent implements OnInit, OnDestroy {
     this.loading = true;
 
     forkJoin({
-      featuredProducts: this.ecommerceService.getFeaturedProducts(8),
+      featuredProducts: this.ecommerceService.getFeaturedProducts(8, this.getCompanyId()),
       featuredServices: this.ecommerceService.getFeaturedServices(6),
-      newProducts: this.ecommerceService.getNewProducts(8),
+      newProducts: this.ecommerceService.getNewProducts(8, this.getCompanyId()),
       productFilterOptions: this.ecommerceService.getProductFilterOptions()
     }).pipe(
       takeUntil(this.destroy$)
@@ -484,5 +495,11 @@ export class EcommerceHomeComponent implements OnInit, OnDestroy {
    */
   onHeroCTA(): void {
     this.router.navigate(['ecommerce/products']);
+  }
+    private getCurrentUserId(): number {
+    return Number(this.currentUser?.idUser) || 0;
+  }
+    private getCompanyId(): number {
+    return Number(this.currentUser?.company.id) || 0;
   }
 }

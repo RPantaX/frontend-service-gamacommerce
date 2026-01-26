@@ -1,10 +1,13 @@
-import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit, inject } from '@angular/core';
 
-import { Subject, takeUntil, forkJoin } from 'rxjs';
+import { Subject, takeUntil, forkJoin, Observable, take, switchMap } from 'rxjs';
 import { MessageService } from 'primeng/api';
 import { Chart } from 'chart.js/auto';
 import { DashboardSummary, SalesAnalytics, TodayTransaction, TopProduct } from '../../../../models/dashboard/dashboard.interface';
 import { DashboardService } from '../../../../../core/services/dashboard/dashboard.service';
+import { SecurityState } from '../../../../../../@security/interfaces/SecurityState';
+import { Store } from '@ngrx/store';
+import { User } from '../../../../models/auth/auth.interface';
 
 @Component({
   selector: 'app-dashboard',
@@ -15,7 +18,9 @@ export class DashboardComponent implements OnInit,AfterViewInit ,OnDestroy {
   @ViewChild('chartCanvas') chartCanvas: any;
 
   private destroy$ = new Subject<void>();
-
+  private store: Store<SecurityState> = inject(Store);
+  currentUserSession$: Observable<User | null>;
+  currentUserSession: User | null = null;
   // Dashboard data
   dashboardSummary: DashboardSummary | null = null;
   salesAnalytics: SalesAnalytics[] = [];
@@ -58,10 +63,16 @@ export class DashboardComponent implements OnInit,AfterViewInit ,OnDestroy {
     private dashboardService: DashboardService,
     private messageService: MessageService
   ) {
+    this.currentUserSession$ = this.store.select(state => state.userState.user);
     this.initializeChart();
   }
 
   ngOnInit(): void {
+        this.currentUserSession$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(user => {
+      this.currentUserSession = user;
+    });
     this.loadDashboardData();
   }
  ngAfterViewInit(): void {
@@ -84,7 +95,7 @@ export class DashboardComponent implements OnInit,AfterViewInit ,OnDestroy {
 
   private loadSummaryData(): void {
     this.loading.summary = true;
-    this.dashboardService.getDashboardSummary()
+    this.dashboardService.getDashboardSummary(this.currentUserSession?.company.id!)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
@@ -103,7 +114,7 @@ export class DashboardComponent implements OnInit,AfterViewInit ,OnDestroy {
     const startDate = this.customDateRange?.[0] ? this.formatDate(this.customDateRange[0]) : undefined;
     const endDate = this.customDateRange?.[1] ? this.formatDate(this.customDateRange[1]) : undefined;
 
-    this.dashboardService.getSalesAnalytics(this.analyticsType, this.analyticsPeriod, startDate, endDate)
+    this.dashboardService.getSalesAnalytics(this.currentUserSession?.company.id!, this.analyticsType, this.analyticsPeriod, startDate, endDate)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
@@ -119,9 +130,14 @@ export class DashboardComponent implements OnInit,AfterViewInit ,OnDestroy {
   }
 
   private loadTodayTransactions(): void {
-    this.loading.transactions = true;
-    this.dashboardService.getTodayTransactions()
-      .pipe(takeUntil(this.destroy$))
+    this.currentUserSession$
+    .pipe(
+      take(1),
+      switchMap(user => {
+        this.loading.transactions = true;
+        return this.dashboardService.getTodayTransactions(user?.company.id!)
+      })
+    ).pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
           this.todayTransactions = data;
@@ -136,7 +152,7 @@ export class DashboardComponent implements OnInit,AfterViewInit ,OnDestroy {
 
   private loadTopProducts(): void {
     this.loading.topProducts = true;
-    this.dashboardService.getTopProducts(this.topProductsPeriod)
+    this.dashboardService.getTopProducts(this.topProductsPeriod, this.currentUserSession?.company.id!)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {

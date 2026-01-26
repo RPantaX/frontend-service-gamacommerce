@@ -2,8 +2,12 @@
   "welcomeMessage": "Benvenuto, {{ firstName }}! Come stai oggi?",
   "changeLanguage": "lingua",
   "changeLanguageTo": "Cambia lingua in {{ language }}",
+  "companies": {
+    "title": "Aziende",
+    "description": "Questa è la pagina delle aziende"
+  },
   "home": {
-    "title": "Gestione BraidsByAngie",
+    "title": "Gestione GamaCommerce",
     "description": "Questa è la pagina iniziale",
     "modules": {
       "title": "Moduli",

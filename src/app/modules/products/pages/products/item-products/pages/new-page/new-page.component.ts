@@ -2,12 +2,15 @@ import { Component, inject, signal, ViewChild, ElementRef } from '@angular/core'
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { tap } from 'rxjs';
+import { filter, Observable, switchMap, take, tap } from 'rxjs';
 
 import { ItemProductService } from '../../../../../../../core/services/products/items-products.service';
 import { VariationService } from '../../../../../../../core/services/products/variation.service';
 import { ItemProductSave, ItemProductFormData } from '../../../../../../../shared/models/products/item-product.interface';
 import { Variation, VariationOptionEntity } from '../../../../../../../shared/models/vatiations/variation.interface';
+import { Store } from '@ngrx/store';
+import { SecurityState } from '../../../../../../../../@security/interfaces/SecurityState';
+import { User } from '../../../../../../../shared/models/auth/auth.interface';
 
 @Component({
   selector: 'item-product-new-page',
@@ -16,11 +19,12 @@ import { Variation, VariationOptionEntity } from '../../../../../../../shared/mo
 })
 export class NewPageComponent {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
-
+  private store: Store<SecurityState> = inject(Store);
   private fb = inject(FormBuilder);
   private idItemProduct!: number;
   idProduct!: number;
-
+ currentUserSession$: Observable<User | null>;
+  currentUserSession: User | null = null;
   isEditMode = false;
   variations = signal<Variation[]>([]);
   optionVariations = signal<VariationOptionEntity[]>([]);
@@ -61,6 +65,7 @@ export class NewPageComponent {
   router = inject(Router);
 
   constructor() {
+     this.currentUserSession$ = this.store.select(state => state.userState.user);
     // Limpiar error de SKU cuando el usuario modifique el campo
     this.entityForm.get('productItemSKU')?.valueChanges.subscribe(() => {
       if (this._skuError()) {
@@ -397,7 +402,19 @@ export class NewPageComponent {
   }
 
   private getVariationList(): void {
-    this.variatonService.getVariationListByCompanyId(this.companyId).subscribe(response => {
+
+    this.currentUserSession$
+    .pipe(
+      filter(user => user !== null && user.company.id !== undefined),
+                          // Obtén solo el valor actual e inmediatamente desuscríbete
+                          take(1),
+                          // Usa switchMap para cambiar al Observable de la llamada al servicio
+                          switchMap(user => {
+                            this.companyId = user!.company.id;
+                            return this.variatonService.getVariationListByCompanyId(this.companyId);
+                          }
+    )
+  ).subscribe(response => {
       this.variations.set(response);
     });
   }

@@ -1,0 +1,75 @@
+<div class="stripe-payment-container">
+  <div class="payment-header">
+    <h3 class="payment-title">
+      <i class="pi pi-credit-card"></i>
+      Información de Pago
+    </h3>
+    <div class="payment-amount">
+      <span class="amount-label">Total a pagar:</span>
+      <span class="amount-value">S/. {{ amount | number:'1.2-2' }}</span>
+    </div>
+  </div>
+
+  <form class="payment-form" (submit)="processPayment(); $event.preventDefault()">
+
+    <!-- Stripe Card Element -->
+    <div class="form-group">
+      <label for="card-element" class="form-label">
+        Tarjeta de Crédito o Débito
+      </label>
+      <div id="card-element" class="stripe-card-element">
+        <!-- Stripe Elements se montará aquí -->
+      </div>
+
+      <!-- Iconos de tarjetas aceptadas -->
+      <div class="accepted-cards">
+        <i class="pi pi-credit-card"></i>
+        <span>Visa</span>
+        <span>Mastercard</span>
+        <span>American Express</span>
+      </div>
+    </div>
+
+    <!-- Mensaje de error -->
+    <div class="error-message" *ngIf="errorMessage()">
+      <i class="pi pi-exclamation-triangle"></i>
+      <span>{{ errorMessage() }}</span>
+    </div>
+
+    <!-- Información de seguridad -->
+    <div class="security-info">
+      <i class="pi pi-lock"></i>
+      <span>Tu pago está protegido con cifrado SSL</span>
+    </div>
+
+    <!-- Botón de pago -->
+    <button
+      type="submit"
+      class="pay-button"
+      [disabled]="processing() || amount <= 0"
+      [class.processing]="processing()">
+
+      <span *ngIf="!processing()">
+        <i class="pi pi-check"></i>
+        Pagar S/. {{ amount | number:'1.2-2' }}
+      </span>
+
+      <span *ngIf="processing()">
+        <i class="pi pi-spin pi-spinner"></i>
+        Procesando pago...
+      </span>
+    </button>
+
+    <!-- Términos -->
+    <p class="terms-text">
+      Al realizar el pago, aceptas nuestros
+      <a href="/terminos" target="_blank">términos y condiciones</a>
+    </p>
+  </form>
+
+  <!-- Powered by Stripe -->
+  <div class="powered-by">
+    <span>Procesado de forma segura por</span>
+    <img src="assets/stripe-logo.svg" alt="Stripe" class="stripe-logo" />
+  </div>
+</div>

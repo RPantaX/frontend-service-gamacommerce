@@ -371,9 +371,10 @@ export class CartComponent implements OnInit, OnDestroy {
   private calculateTotals(): void {
     if (!this.cart) return;
 
-    const subtotal = this.getSubtotal();
+    let subtotal = this.getSubtotal();
+    subtotal = subtotal - this.calculateTax(subtotal); // Exclude tax from subtotal
     let shipping = this.selectedShippingOption.price;
-    const tax = this.calculateTax(subtotal);
+    const tax = this.calculateTax(this.getSubtotal());
     let discount = 0;
 
     // Apply promo code discount
@@ -418,7 +419,7 @@ export class CartComponent implements OnInit, OnDestroy {
   /**
    * Calculate tax (18% IGV in Peru)
    */
-  private calculateTax(subtotal: number): number {
+  public calculateTax(subtotal: number): number {
     return subtotal * 0.18;
   }
 

@@ -153,98 +153,6 @@
             </div>
           </div>
 
-          <!-- Shipping Address Form -->
-          <form [formGroup]="shippingForm" class="shipping-form" *ngIf="selectedShippingMethod()?.id !== 'pickup'">
-            <h3>Dirección de entrega</h3>
-
-            <div class="form-grid">
-              <div class="form-group full-width">
-                <label for="address">Dirección *</label>
-                <input
-                  id="address"
-                  type="text"
-                  pInputText
-                  formControlName="address"
-                  [class.p-invalid]="hasFieldError(shippingForm, 'address')"
-                  placeholder="Av. Ejemplo 123" />
-                <small
-                  class="p-error"
-                  *ngIf="hasFieldError(shippingForm, 'address')">
-                  {{ getFieldError(shippingForm, 'address') }}
-                </small>
-              </div>
-
-              <div class="form-group full-width">
-                <label for="addressLine2">Departamento/Piso (opcional)</label>
-                <input
-                  id="addressLine2"
-                  type="text"
-                  pInputText
-                  formControlName="addressLine2"
-                  placeholder="Dpto. 101" />
-              </div>
-
-              <div class="form-group">
-                <label for="city">Ciudad *</label>
-                <input
-                  id="city"
-                  type="text"
-                  pInputText
-                  formControlName="city"
-                  [class.p-invalid]="hasFieldError(shippingForm, 'city')"
-                  placeholder="Lima" />
-                <small
-                  class="p-error"
-                  *ngIf="hasFieldError(shippingForm, 'city')">
-                  {{ getFieldError(shippingForm, 'city') }}
-                </small>
-              </div>
-
-              <div class="form-group">
-                <label for="district">Distrito *</label>
-                <input
-                  id="district"
-                  type="text"
-                  pInputText
-                  formControlName="district"
-                  [class.p-invalid]="hasFieldError(shippingForm, 'district')"
-                  placeholder="Miraflores" />
-                <small
-                  class="p-error"
-                  *ngIf="hasFieldError(shippingForm, 'district')">
-                  {{ getFieldError(shippingForm, 'district') }}
-                </small>
-              </div>
-
-              <div class="form-group">
-                <label for="postalCode">Código Postal *</label>
-                <input
-                  id="postalCode"
-                  type="text"
-                  pInputText
-                  formControlName="postalCode"
-                  [class.p-invalid]="hasFieldError(shippingForm, 'postalCode')"
-                  placeholder="15074" />
-                <small
-                  class="p-error"
-                  *ngIf="hasFieldError(shippingForm, 'postalCode')">
-                  {{ getFieldError(shippingForm, 'postalCode') }}
-                </small>
-              </div>
-
-              <div class="form-group full-width">
-                <label for="references">Referencias</label>
-                <textarea
-                  id="references"
-                  pInputTextarea
-                  formControlName="references"
-                  rows="3"
-                  placeholder="Puerta verde, al lado de farmacia...">
-                </textarea>
-              </div>
-            </div>
-          </form>
-
           <!-- Pickup Location Info -->
           <div class="pickup-info" *ngIf="selectedShippingMethod()?.id === 'pickup'">
             <h3>Información de recojo</h3>
@@ -263,16 +171,6 @@
             </div>
           </div>
 
-          <!-- Estimated Delivery -->
-          <div class="delivery-estimate" *ngIf="selectedShippingMethod()">
-            <div class="estimate-card">
-              <i class="pi pi-truck"></i>
-              <div class="estimate-info">
-                <h4>Entrega estimada</h4>
-                <p>{{ getEstimatedDeliveryDate() }}</p>
-              </div>
-            </div>
-          </div>
         </div>
 
     <!-- Step 2: Payment Information -->
@@ -318,11 +216,11 @@
           <h3>Instrucciones de pago</h3>
           <div class="instructions-content" [ngSwitch]="selectedPaymentMethod()?.id">
 
-            <div *ngSwitchCase="'yape'">
-              <p>Te enviaremos un código QR para realizar el pago con Yape una vez confirmado el pedido.</p>
+            <div *ngSwitchCase="'venta_fisica'">
+              <p>Venta fisica.</p>
               <ul>
-                <li>Tendrás 15 minutos para completar el pago</li>
-                <li>El pedido se procesará automáticamente al confirmar el pago</li>
+                <li>Pago inmediato</li>
+                <li>El pedido se procesará automáticamente al realizar el pago</li>
               </ul>
             </div>
 

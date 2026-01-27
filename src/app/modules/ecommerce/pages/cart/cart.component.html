@@ -407,43 +407,6 @@
                 </div>
               </div>
 
-              <!-- Shipping Options -->
-              <div class="shipping-options">
-                <h4 class="shipping-title">Opciones de Envío</h4>
-                <div class="shipping-list">
-                  <div
-                    class="shipping-option"
-                    *ngFor="let option of shippingOptions"
-                    [class.selected]="selectedShippingOption.id === option.id"
-                    (click)="updateShippingOption(option)">
-
-                    <div class="option-radio">
-                      <p-radioButton
-                        [name]="'shipping'"
-                        [value]="option"
-                        [(ngModel)]="selectedShippingOption">
-                      </p-radioButton>
-                    </div>
-
-                    <div class="option-content">
-                      <div class="option-header">
-                        <i [class]="option.icon" class="option-icon"></i>
-                        <span class="option-name">{{ option.name }}</span>
-                        <span class="option-price">
-                          <span *ngIf="option.price === 0" class="free-text">GRATIS</span>
-                          <span *ngIf="option.price > 0">{{ formatPrice(option.price) }}</span>
-                        </span>
-                      </div>
-                      <p class="option-description">{{ option.description }}</p>
-                      <div class="option-delivery">
-                        <i class="pi pi-clock"></i>
-                        <span>Estimado: {{ getEstimatedDeliveryDate() }}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               <!-- Checkout Button -->
               <div class="checkout-section">
                 <p-button

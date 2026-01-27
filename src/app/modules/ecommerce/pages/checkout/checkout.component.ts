@@ -100,14 +100,14 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       description: 'Visa, Mastercard, American Express'
     },
     {
-      id: 'yape',
-      name: 'Yape',
-      icon: 'pi pi-mobile',
+      id: 'venta_fisica',
+      name: 'Venta Física',
+      icon: 'pi pi-credit-card',
       description: 'Pago móvil instantáneo'
     },
     {
       id: 'plin',
-      name: 'Plin',
+      name: 'Plin/Yape',
       icon: 'pi pi-mobile',
       description: 'Pago móvil entre bancos'
     },
@@ -122,19 +122,11 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   shippingMethods: ShippingMethod[] = [
     {
       id: 'standard',
-      name: 'Envío Estándar',
-      description: 'Entrega a domicilio',
-      price: 15.00,
-      estimatedDays: '3-5 días',
+      name: 'Venta en Tienda',
+      description: 'Venta en Tienda',
+      price: 0,
+      estimatedDays: 'Inmediato',
       shoppingMethodId: 1
-    },
-    {
-      id: 'express',
-      name: 'Envío Express',
-      description: 'Entrega rápida',
-      price: 25.00,
-      estimatedDays: '1-2 días',
-      shoppingMethodId: 2
     }
   ];
   constructor() {
@@ -250,7 +242,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       case 0:
         return this.customerForm.valid;
       case 1:
-        return this.shippingForm.valid && this.selectedShippingMethod() !== null;
+        return true;
       case 2:
         return this.selectedPaymentMethod() !== null && this.validatePaymentForm();
       case 3:
@@ -548,11 +540,11 @@ onStripePaymentSuccess(paymentResult: PaymentResult): void {
     reservationId: this.getReservationId(),
     userId: this.getUserId(),
     requestAdress: {
-      adressStreet: this.shippingForm.get('address')?.value,
-      adressCity: this.shippingForm.get('city')?.value,
-      adressState: this.shippingForm.get('district')?.value,
+      adressStreet: "VENTA FISICA",
+      adressCity: "VENTA FISICA",
+      adressState: "VENTA FISICA",
       adressCountry: 'Perú',
-      adressPostalCode: this.shippingForm.get('postalCode')?.value
+      adressPostalCode: "VENTA FISICA"
     },
     shoppingMethodId: Number(this.selectedShippingMethod()?.id) || 1,
     // Agregar el paymentIntentId de Stripe

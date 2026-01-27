@@ -66,7 +66,7 @@ export class CartComponent implements OnInit, OnDestroy {
       id: 'standard',
       name: 'Envío Estándar',
       description: '3-5 días hábiles',
-      price: 15,
+      price: 0,
       estimatedDays: '3-5 días',
       icon: 'pi pi-truck'
     },
@@ -74,7 +74,7 @@ export class CartComponent implements OnInit, OnDestroy {
       id: 'express',
       name: 'Envío Express',
       description: '1-2 días hábiles',
-      price: 25,
+      price: 0,
       estimatedDays: '1-2 días',
       icon: 'pi pi-send'
     },

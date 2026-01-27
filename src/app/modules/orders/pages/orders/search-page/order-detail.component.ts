@@ -55,9 +55,7 @@ export class OrderDetailComponent implements OnInit, OnDestroy {
            order.responseReservationDetail.responseWorkServiceDetails.length > 0;
   });
   orderTotal = computed(() => {
-    const order = this.orderDetail();
-    if (!order || !order.orderLineDTOList) return 0;
-    return order.orderLineDTOList.reduce((total, line) => total + line.orderLineTotal, 0);
+    return this.calculateTotal();
   });
 
   timeline = computed<TimelineEvent[]>(() => {
@@ -253,11 +251,50 @@ export class OrderDetailComponent implements OnInit, OnDestroy {
     return order.responseProductItemDetailList.find(p => p.productItemId === productItemId);
   }
 
-  calculateSubtotal(): number {
+  /**
+   * Obtiene la cantidad de un producto específico desde orderLineDTOList
+   */
+  getProductQuantity(productItemId: number): number {
     const order = this.orderDetail();
     if (!order || !order.orderLineDTOList) return 0;
 
-    return order.orderLineDTOList.reduce((total, line) => total + (line.orderLinePrice * line.orderLineQuantity), 0);
+    const orderLine = order.orderLineDTOList.find(line => line.productItemId === productItemId);
+    return orderLine ? orderLine.orderLineQuantity : 0;
+  }
+
+  /**
+   * Calcula el total de una línea de producto (precio * cantidad)
+   */
+  getProductLineTotal(productItemId: number): number {
+    const product = this.getProductById(productItemId);
+    const quantity = this.getProductQuantity(productItemId);
+
+    if (!product) return 0;
+
+    return product.productItemPrice * quantity;
+  }
+
+  /**
+   * Calcula el subtotal (suma de todos los productos CON IGV incluido)
+   * Este es el total bruto que ya incluye el IGV
+   */
+  calculateSubtotalWithTax(): number {
+    const order = this.orderDetail();
+    if (!order || !order.responseProductItemDetailList) return 0;
+
+    return order.responseProductItemDetailList.reduce((total, product) => {
+      const quantity = this.getProductQuantity(product.productItemId);
+      return total + (product.productItemPrice * quantity);
+    }, 0);
+  }
+
+  /**
+   * Calcula el subtotal sin IGV
+   * Fórmula: Subtotal sin IGV = Total con IGV / 1.18
+   */
+  calculateSubtotal(): number {
+    const totalWithTax = this.calculateSubtotalWithTax();
+    return totalWithTax / 1.18;
   }
 
   getShippingCost(): number {
@@ -265,9 +302,22 @@ export class OrderDetailComponent implements OnInit, OnDestroy {
     return 15.00; // Default shipping cost
   }
 
+  /**
+   * Calcula el monto del IGV (18%)
+   * Fórmula: IGV = Subtotal sin IGV * 0.18
+   */
   getTaxAmount(): number {
     const subtotal = this.calculateSubtotal();
-    return subtotal * 0.18; // 18% IGV in Peru
+    return subtotal * 0.18;
+  }
+
+  /**
+   * Calcula el total final (Subtotal con IGV + Envío)
+   */
+  calculateTotal(): number {
+    const subtotalWithTax = this.calculateSubtotalWithTax();
+    const shipping = this.getShippingCost();
+    return subtotalWithTax + shipping;
   }
 
   trackByOrderLineId(index: number, item: OrderLineDTO): number {
@@ -277,6 +327,7 @@ export class OrderDetailComponent implements OnInit, OnDestroy {
   trackByProductId(index: number, item: ResponseProductItemDetail): number {
     return item.productItemId;
   }
+
   formatAccountNumber(accountNumber: number | string | undefined): string {
     if (!accountNumber) return '';
     return '**** ' + accountNumber.toString().slice(-4);

@@ -42,6 +42,18 @@
 
       <!-- Right Section -->
       <div class="flex align-items-center gap-3">
+        <!-- Cart Button -->
+        <div class="relative">
+          <p-button
+            icon="pi pi-shopping-cart"
+            [rounded]="true"
+            [outlined]="true"
+            (onClick)="navigateToCart()"
+            pTooltip="Ver carrito"
+            tooltipPosition="bottom">
+          </p-button>
+        </div>
+
         <!-- Notifications -->
         <div class="relative">
           <p-button
@@ -75,9 +87,8 @@
           </span>
         </div>
 
-        <!-- Language Selector -->
         <app-language-selector></app-language-selector>
-
+        <!-- /Language Selector -->
         <!-- Theme Toggle -->
         <p-button
           [icon]="isDarkTheme ? 'pi pi-sun' : 'pi pi-moon'"
@@ -222,12 +233,6 @@
 
                 <ul class="submenu-items" [class.expanded]="expandedSections.has('products')">
                   <li>
-                    <a pRipple class="submenu-item-link">
-                      <i class="pi pi-sort-numeric-up"></i>
-                      <span>{{ "home.modules.products.managment.stock" | translate }}</span>
-                    </a>
-                  </li>
-                  <li>
                     <a pRipple routerLink="/products/manage/list" routerLinkActive="active" class="submenu-item-link">
                       <i class="pi pi-shopping-bag"></i>
                       <span>{{ "home.modules.products.managment.products" | translate }}</span>
@@ -272,12 +277,6 @@
                 <a pRipple class="submenu-link" routerLink="ecommerce">
                   <i class="pi pi-cart-minus submenu-icon"></i>
                   <span>{{ "home.modules.sales.managment.products" | translate }}</span>
-                </a>
-              </li>
-              <li>
-                <a pRipple class="submenu-link">
-                  <i class="pi pi-calendar submenu-icon"></i>
-                  <span>{{ "home.modules.sales.managment.services" | translate }}</span>
                 </a>
               </li>
             </ul>
@@ -351,15 +350,15 @@
 
   <!-- Main Content Area -->
   <div class="layout-main" [class.sidebar-active]="sidebarVisible">
-  <div class="content-wrapper">
+  <div class="content-wrapper">
 
-        <div class="page-header">
-      <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome"></p-breadcrumb>
-    </div>
+        <div class="page-header">
+      <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome"></p-breadcrumb>
+    </div>
 
-    <router-outlet></router-outlet>
+    <router-outlet></router-outlet>
 
-  </div>
+  </div>
 </div>
 
 <!-- Dialogs and Toasts -->

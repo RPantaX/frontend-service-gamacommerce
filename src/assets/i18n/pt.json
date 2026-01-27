@@ -55,7 +55,7 @@
       "sales": {
         "title": "Vendas",
         "managment": {
-          "products": "Gestão de produtos",
+          "products": "Venda de produtos",
           "services": "Gestão de serviços"
         }
       }

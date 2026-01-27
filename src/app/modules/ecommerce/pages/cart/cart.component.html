@@ -369,7 +369,7 @@
                 <!-- Subtotal -->
                 <div class="summary-row">
                   <span class="summary-label">Subtotal ({{ cartItems.length }} productos)</span>
-                  <span class="summary-value">{{ formatPrice(getSubtotal()) }}</span>
+                  <span class="summary-value">{{ formatPrice(getSubtotal() - calculateTax(getSubtotal())) }}</span>
                 </div>
 
                 <!-- Shipping -->

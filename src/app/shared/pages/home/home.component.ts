@@ -250,6 +250,10 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.router.navigate(['/settings']);
   }
 
+  navigateToCart(): void {
+    this.router.navigate(['/ecommerce/cart']);
+  }
+
   openHelp(): void {
     window.open('/help', '_blank');
   }

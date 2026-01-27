@@ -197,15 +197,6 @@ companyId: number = 1;
 
     this.productImages = [];
 
-    // Add main product image
-    if (this.product.productImage) {
-      this.productImages.push({
-        src: this.product.productImage,
-        alt: this.product.productName,
-        thumbnail: this.product.productImage
-      });
-    }
-
     // Add item images
     this.product.responseProductItemDetails.forEach(item => {
       if (item.productItemImage && !this.productImages.find(img => img.src === item.productItemImage)) {

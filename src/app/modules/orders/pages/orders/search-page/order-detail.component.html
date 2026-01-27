@@ -71,7 +71,7 @@
               <!-- Product Image -->
               <div class="product-image">
                 <img
-                  [src]="getProductById(product.productItemId)?.productItemImage || 'assets/images/product-placeholder.jpg'"
+                  [src]="product.productItemImage || 'assets/images/product-placeholder.jpg'"
                   [alt]="'Producto ' + product.productItemId"
                   class="w-4rem h-4rem border-round object-cover">
               </div>
@@ -84,20 +84,20 @@
                       Producto #{{ product.productItemId }}
                     </h4>
                     <p class="text-600 mb-2">
-                      SKU: {{ getProductById(product.productItemId)?.productItemSKU }}
+                      SKU: {{ product.productItemSKU }}
                     </p>
                     <div class="flex align-items-center gap-4">
                       <span class="text-600">
-                        Cantidad: <strong>to do</strong>
+                        Cantidad: <strong>{{ getProductQuantity(product.productItemId) }}</strong>
                       </span>
                       <span class="text-600">
-                        Precio: <strong>{{ formatCurrency(product.productItemPrice) }}</strong>
+                        Precio unitario: <strong>{{ formatCurrency(product.productItemPrice) }}</strong>
                       </span>
                     </div>
                   </div>
                   <div class="text-right">
                     <div class="text-xl font-bold text-900">
-                      {{ formatCurrency(product.productItemPrice) }}
+                      {{ formatCurrency(getProductLineTotal(product.productItemId)) }}
                     </div>
                   </div>
                 </div>
@@ -209,22 +209,22 @@
         </ng-template>
 
         <div class="order-summary">
-          <!-- Subtotal -->
+          <!-- Subtotal sin IGV -->
           <div class="flex justify-content-between align-items-center py-2">
-            <span class="text-600">Subtotal:</span>
+            <span class="text-600">Subtotal (sin IGV):</span>
             <span class="font-semibold">{{ formatCurrency(calculateSubtotal()) }}</span>
+          </div>
+
+          <!-- IGV -->
+          <div class="flex justify-content-between align-items-center py-2">
+            <span class="text-600">IGV (18%):</span>
+            <span class="font-semibold">{{ formatCurrency(getTaxAmount()) }}</span>
           </div>
 
           <!-- Shipping -->
           <div class="flex justify-content-between align-items-center py-2">
             <span class="text-600">Envío:</span>
             <span class="font-semibold">{{ formatCurrency(getShippingCost()) }}</span>
-          </div>
-
-          <!-- Tax -->
-          <div class="flex justify-content-between align-items-center py-2">
-            <span class="text-600">IGV (18%):</span>
-            <span class="font-semibold">{{ formatCurrency(getTaxAmount()) }}</span>
           </div>
 
           <p-divider></p-divider>
